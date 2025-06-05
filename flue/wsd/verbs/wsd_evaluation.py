@@ -7,8 +7,6 @@ from modules.dataset import WSDDatasetReader
 from modules.classifier import WSDKnnClassifier
 from modules import utils
 
-from pudb import set_trace
-
 
 usage = '''
             ====================================================================================
