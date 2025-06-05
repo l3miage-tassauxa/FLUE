@@ -19,7 +19,6 @@ from xlm.utils import bool_flag, initialize_exp
 from xlm.evaluation.glue import GLUE
 from xlm.evaluation.xnli import XNLI
 from xlm.evaluation.flue import FLUE
-from xlm.evaluation.flue_simple import FLUE_simpleHead
 from xlm.model.embedder import SentenceEmbedder
 
 

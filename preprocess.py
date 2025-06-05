@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+bash ~/Anaconda3-2024.10-1-Linux-x86_64.sh#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2019-present, Facebook, Inc.
