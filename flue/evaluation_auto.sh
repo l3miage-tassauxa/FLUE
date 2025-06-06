@@ -2,8 +2,8 @@
 # Aurélien Tassaux
 
 #Macros
-DATA_DIR=./Data
-MODEL_DIR=./Model
+DATA_DIR=./flue/Data
+MODEL_DIR=./flue/Model
 MODEL_PATH=$MODEL_DIR/model.pth
 
 # Check isi le premier argument est fourni
@@ -25,8 +25,7 @@ if [ $2 == true ]; then
         exit 1
     fi
     echo "Installing required libraries..."
-    pip install -r ../requirements.txt
-    cd ..
+    pip install -r ./requirements.txt
     cd tools
     git clone https://github.com/attardi/wikiextractor.git
     git clone https://github.com/moses-smt/mosesdecoder.git
@@ -35,7 +34,6 @@ if [ $2 == true ]; then
     g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
     cd ..
     cd ..
-    cd flue
     echo "Libraries installed."
 else
     echo "Skipping library installation."
@@ -45,21 +43,21 @@ fi
 case $1 in
     cls)
     echo "Getting CLS data..."
-        ./get-data-cls.sh $DATA_DIR
+        ./flue/get-data-cls.sh $DATA_DIR
         echo "Preparing CLS data..."
         ./flue/prepare-data-cls.sh $DATA_DIR $MODEL_PATH false
         ;;
 
     pawsx)
         echo "Getting PAWSX data..."
-        ./get-data-xnli.sh $DATA_DIR
+        ./flue/get-data-xnli.sh $DATA_DIR
         echo "Preparing PAWSX data..."
         ./flue/prepare-data-pawsx.sh $DATA_DIR $MODEL_PATH false
         ;;
 
     xnli)
         echo "Getting XNLI data..."
-        ./get-data-xnli.sh $DATA_DIR
+        ./flue/get-data-xnli.sh $DATA_DIR
         echo "Preparing XNLI data..."
         ./flue/prepare-data-xnli.sh $DATA_DIR $MODEL_PATH false
         echo "Running XNLI evaluation..."
@@ -67,7 +65,7 @@ case $1 in
         oarsub -I
         config='flue/examples/xnli_lr5e6_xlm_base_cased.cfg'
         source $config
-        python flue/flue_xnli.py --exp_name $exp_name \
+        python ./flue/flue_xnli.py --exp_name $exp_name \
                         --exp_id $exp_id \
                         --dump_path $dump_path  \
                         --model_path $model_path  \
@@ -88,7 +86,7 @@ case $1 in
     vsd)
         echo "Getting VSD data..."
         FSE_DIR=./Data/FSE-1.1-191210
-        python prepare_data.py --data $FSE_DIR --output $DATA_DIR
+        python ./flue/prepare_data.py --data $FSE_DIR --output $DATA_DIR
         echo "Preparing VSD data..."
         ./flue/prepare-data-vsd.sh $DATA_DIR $MODEL_PATH false
         ;;
