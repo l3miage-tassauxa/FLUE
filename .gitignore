@@ -14,5 +14,4 @@ flue/.DS_Store
 run-finetune-1.sh
 run-finetune.slurm
 submit_finetune_jz.sh
-Data/processed
-Data/raw
+Data/*
