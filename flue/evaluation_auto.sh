@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Aurélien Tassaux
 
-#Macros
+# Macros
 DATA_DIR=./flue/Data
 MODEL_DIR=./flue/Model
 MODEL_PATH=$MODEL_DIR/model.pth
 
-# Check isi le premier argument est fourni
+# Check si le premier argument est fourni
 if [ -z "$1" ]; then
         echo "Veuiller spécifier une tache."
         exit 1
@@ -39,7 +39,7 @@ else
     echo "Skipping library installation."
 fi
 
-# Lance les scripts de préparation des données et d'avaluation en fonction de la tâche spécifiée
+# Lance les scripts de préparation des données et d'évaluation en fonction de la tâche spécifiée
 case $1 in
     cls)
         echo "Getting CLS data..."
@@ -63,7 +63,6 @@ case $1 in
         echo "Preparing XNLI data..."
         ./flue/prepare-data-xnli.sh $DATA_DIR/xnli $MODEL_PATH false
         echo "Running XNLI evaluation..."
-        # pas vérifié a partir de ce moment là
         config='flue/examples/xnli_lr5e6_xlm_base_cased.cfg'
         source $config
         python ./flue/flue_xnli.py --exp_name $exp_name \
@@ -82,16 +81,22 @@ case $1 in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         ;;
-    vsd)
-        echo "Getting VSD data..."
+    parse)
+        echo "Getting Parse data..."
+        ./flue/get-data-parse.sh $DATA_DIR
+        echo "Preparing Parse data..."
+        ./flue/prepare-data-parse.sh $DATA_DIR $MODEL_PATH false
+        ;;
+    wsd)
+        echo "Getting WSD data..."
         FSE_DIR=./Data/FSE-1.1-191210
         python ./flue/prepare_data.py --data $FSE_DIR --output $DATA_DIR
-        echo "Preparing VSD data..."
-        ./flue/prepare-data-vsd.sh $DATA_DIR $MODEL_PATH false
+        echo "Preparing WSD data..."
+        ./flue/prepare-data-wsd.sh $DATA_DIR $MODEL_PATH false
         ;;
     *)
         echo "Veuiller spécifier une tache valide."
-        echo "Tâches valides: cls, pawsx, xnli, vsd"
+        echo "Tâches valides: cls, pawsx, xnli, parse, wsd"
         exit 1
         ;;
 esac
