@@ -19,18 +19,18 @@ fi
 
 # Installe les libraries requises
 if [ $2 == true ]; then
-    # Check si on est dans le dossier flue
-    if [ "$(basename "$PWD")" != "flue" ]; then
-        echo "Veuillez positionner le terminal dans le dossier FLUE/flue."
+    # Check si on est dans le dossier FLUE
+    if [ "$(basename "$PWD")" != "FLUE" ]; then
+        echo "Veuillez positionner le terminal dans le dossier FLUE, racine du git."
         exit 1
     fi
     echo "Installing required libraries..."
     pip install -r ./requirements.txt
-    cd tools
+    cd ./tools
     git clone https://github.com/attardi/wikiextractor.git
     git clone https://github.com/moses-smt/mosesdecoder.git
     git clone https://github.com/glample/fastBPE.git
-    cd fastBPE
+    cd ./fastBPE
     g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
     cd ..
     cd ..
@@ -42,7 +42,7 @@ fi
 # Lance les scripts de préparation des données et d'avaluation en fonction de la tâche spécifiée
 case $1 in
     cls)
-    echo "Getting CLS data..."
+        echo "Getting CLS data..."
         ./flue/get-data-cls.sh $DATA_DIR
         echo "Preparing CLS data..."
         ./flue/prepare-data-cls.sh $DATA_DIR $MODEL_PATH false
@@ -56,13 +56,14 @@ case $1 in
         ;;
 
     xnli)
+        echo "Ajout des droits d'exécution aux scripts..."
+        chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py
         echo "Getting XNLI data..."
-        ./flue/get-data-xnli.sh $DATA_DIR
+        ./flue/get-data-xnli.sh $DATA_DIR/xnli
         echo "Preparing XNLI data..."
-        ./flue/prepare-data-xnli.sh $DATA_DIR $MODEL_PATH false
+        ./flue/prepare-data-xnli.sh $DATA_DIR/xnli $MODEL_PATH false
         echo "Running XNLI evaluation..."
         # pas vérifié a partir de ce moment là
-        oarsub -I
         config='flue/examples/xnli_lr5e6_xlm_base_cased.cfg'
         source $config
         python ./flue/flue_xnli.py --exp_name $exp_name \
@@ -74,14 +75,12 @@ case $1 in
                         --transfer_tasks $transfer_tasks \
                         --optimizer_e adam,lr=$lre \
                         --optimizer_p adam,lr=$lrp \
-                        --finetune_layers $finetune_layer \
+                        --finetune_layers $finetune_layers \
                         --batch_size $batch_size \
                         --n_epochs $num_epochs \
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
-        oarsub -c
-        echo "XNLI evaluation completed."
         ;;
     vsd)
         echo "Getting VSD data..."
@@ -92,7 +91,7 @@ case $1 in
         ;;
     *)
         echo "Veuiller spécifier une tache valide."
-        echo "Tâches valides: cls, pawsx, xnli"
+        echo "Tâches valides: cls, pawsx, xnli, vsd"
         exit 1
         ;;
 esac
