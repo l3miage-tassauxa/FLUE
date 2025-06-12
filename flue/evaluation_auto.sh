@@ -96,8 +96,8 @@ case $1 in
     parse)
         if [ $2 == true ]; then
             echo "Installing required libraries..."
-            pip install -r ./requirements.txt
-        echo "Libraries installed."
+            pip install -r ./libraries/xnli-requirements.txt
+            echo "Libraries installed."
         else
             echo "Skipping library installation."
         fi
