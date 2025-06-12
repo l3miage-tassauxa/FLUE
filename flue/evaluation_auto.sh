@@ -4,7 +4,7 @@
 # Macros
 DATA_DIR=./flue/data
 MODEL_DIR=./flue/model
-MODEL_PATH=$MODEL_DIR/model.pth
+MODEL_PATH=$MODEL_DIR
 
 # Check si le premier argument est fourni
 if [ -z "$1" ]; then
