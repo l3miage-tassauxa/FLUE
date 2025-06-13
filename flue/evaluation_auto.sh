@@ -53,7 +53,47 @@ case $1 in
         ./flue/prepare-data-pawsx.sh $DATA_DIR $MODEL_PATH false
         ;;
 
-    xnli)
+    xnli-flaubert)
+        if [ $2 == true ]; then
+            echo "Installing required libraries..."
+            pip install -r ./libraries/xnli-requirements.txt
+            cd ./tools
+            git clone https://github.com/attardi/wikiextractor.git
+            git clone https://github.com/moses-smt/mosesdecoder.git
+            git clone https://github.com/glample/fastBPE.git
+            cd ./fastBPE
+            g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
+            cd ../..
+            echo "Libraries installed."
+        else
+            echo "Skipping library installation."
+        fi
+        echo "Ajout des droits d'exécution aux scripts..."
+        chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py
+        echo "Getting XNLI data..."
+        ./flue/get-data-xnli.sh $DATA_DIR/xnli
+        echo "Preparing XNLI data..."
+        ./flue/prepare-data-xnli.sh $DATA_DIR/xnli $MODEL_PATH false
+        echo "Running XNLI evaluation..."
+        config='flue/examples/xnli_lr5e6_xlm_base_cased.cfg'
+        source $config
+        python ./flue/flue_xnli.py --exp_name $exp_name \
+                        --exp_id $exp_id \
+                        --dump_path $dump_path  \
+                        --model_path $model_path  \
+                        --data_path $data_path  \
+                        --dropout $dropout \
+                        --transfer_tasks $transfer_tasks \
+                        --optimizer_e adam,lr=$lre \
+                        --optimizer_p adam,lr=$lrp \
+                        --finetune_layers $finetune_layers \
+                        --batch_size $batch_size \
+                        --n_epochs $num_epochs \
+                        --epoch_size $epoch_size \
+                        --max_len $max_len \
+                        --max_vocab $max_vocab
+        ;;
+    xnli-pentagruel)
         if [ $2 == true ]; then
             echo "Installing required libraries..."
             pip install -r ./libraries/xnli-requirements.txt
@@ -122,7 +162,7 @@ case $1 in
         ;;
     *)
         echo "Veuiller spécifier une tache valide."
-        echo "Tâches valides: cls, pawsx, xnli, parse, wsd"
+        echo "Tâches valides: cls, pawsx, xnli-flaubert, parse, wsd"
         exit 1
         ;;
 esac
