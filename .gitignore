@@ -14,7 +14,8 @@ flue/.DS_Store
 run-finetune-1.sh
 run-finetune.slurm
 submit_finetune_jz.sh
-flue/Model/*
+flue/model/*
 flue/pretrained_models/*.tar.gz*
 flue/pretrained_models/*.zip*
 flue/pretrained_models/*/
+output.log

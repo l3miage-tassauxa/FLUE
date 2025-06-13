@@ -2,9 +2,9 @@
 # Aurélien Tassaux
 
 # Macros
-DATA_DIR=./flue/Data
-MODEL_DIR=./flue/Model
-MODEL_PATH=$MODEL_DIR/model.pth
+DATA_DIR=./flue/data
+MODEL_DIR=./flue/model
+MODEL_PATH=$MODEL_DIR
 
 # Check si le premier argument est fourni
 if [ -z "$1" ]; then
@@ -17,31 +17,22 @@ if [ -z "$2" ]; then
         exit 1
 fi
 
-# Installe les libraries requises
-if [ $2 == true ]; then
-    # Check si on est dans le dossier FLUE
-    if [ "$(basename "$PWD")" != "FLUE" ]; then
-        echo "Veuillez positionner le terminal dans le dossier FLUE, racine du git."
-        exit 1
-    fi
-    echo "Installing required libraries..."
-    pip install -r ./requirements.txt
-    cd ./tools
-    git clone https://github.com/attardi/wikiextractor.git
-    git clone https://github.com/moses-smt/mosesdecoder.git
-    git clone https://github.com/glample/fastBPE.git
-    cd ./fastBPE
-    g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
-    cd ..
-    cd ..
-    echo "Libraries installed."
-else
-    echo "Skipping library installation."
+# Check si on est dans le dossier FLUE
+if [ "$(basename "$PWD")" != "FLUE" ]; then
+    echo "Veuillez positionner le terminal dans le dossier FLUE, racine du git."
+    exit 1
 fi
 
 # Lance les scripts de préparation des données et d'évaluation en fonction de la tâche spécifiée
 case $1 in
     cls)
+        if [ $2 == true ]; then
+            echo "Installing required libraries..."
+            pip install -r ./requirements.txt
+            echo "Libraries installed."
+        else
+            echo "Skipping library installation."
+        fi
         echo "Getting CLS data..."
         ./flue/get-data-cls.sh $DATA_DIR
         echo "Preparing CLS data..."
@@ -49,6 +40,13 @@ case $1 in
         ;;
 
     pawsx)
+        if [ $2 == true ]; then
+            echo "Installing required libraries..."
+            pip install -r ./requirements.txt
+            echo "Libraries installed."
+        else
+            echo "Skipping library installation."
+        fi
         echo "Getting PAWSX data..."
         ./flue/get-data-xnli.sh $DATA_DIR
         echo "Preparing PAWSX data..."
@@ -56,6 +54,20 @@ case $1 in
         ;;
 
     xnli)
+        if [ $2 == true ]; then
+            echo "Installing required libraries..."
+            pip install -r ./libraries/xnli-requirements.txt
+            cd ./tools
+            git clone https://github.com/attardi/wikiextractor.git
+            git clone https://github.com/moses-smt/mosesdecoder.git
+            git clone https://github.com/glample/fastBPE.git
+            cd ./fastBPE
+            g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
+            cd ../..
+            echo "Libraries installed."
+        else
+            echo "Skipping library installation."
+        fi
         echo "Ajout des droits d'exécution aux scripts..."
         chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py
         echo "Getting XNLI data..."
@@ -82,12 +94,26 @@ case $1 in
                         --max_vocab $max_vocab
         ;;
     parse)
+        if [ $2 == true ]; then
+            echo "Installing required libraries..."
+            pip install -r ./libraries/xnli-requirements.txt
+            echo "Libraries installed."
+        else
+            echo "Skipping library installation."
+        fi
         echo "Getting Parse data..."
         ./flue/get-data-parse.sh $DATA_DIR
         echo "Preparing Parse data..."
         ./flue/prepare-data-parse.sh $DATA_DIR $MODEL_PATH false
         ;;
     wsd)
+        if [ $2 == true ]; then
+            echo "Installing required libraries..."
+            pip install -r ./requirements.txt
+            echo "Libraries installed."
+        else
+            echo "Skipping library installation."
+        fi
         echo "Getting WSD data..."
         FSE_DIR=./Data/FSE-1.1-191210
         python ./flue/prepare_data.py --data $FSE_DIR --output $DATA_DIR
