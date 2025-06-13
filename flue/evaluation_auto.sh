@@ -3,7 +3,7 @@
 
 # Macros
 DATA_DIR=./flue/data
-MODEL_DIR=./flue/model
+MODEL_DIR=./flue/pretrained_models/
 MODEL_PATH=$MODEL_DIR
 
 # Check si le premier argument est fourni
