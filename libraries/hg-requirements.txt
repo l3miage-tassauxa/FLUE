@@ -1,0 +1,55 @@
+aiohappyeyeballs==2.6.1
+aiohttp==3.12.13
+aiosignal==1.3.2
+async-timeout==5.0.1
+attrs==25.3.0
+certifi==2025.6.15
+charset-normalizer==3.4.2
+datasets==3.6.0
+Deprecated @ file:///opt/conda/conda-bld/deprecated_1659726428456/work
+dill==0.3.8
+evaluate==0.4.3
+filelock @ file:///croot/filelock_1744281381737/work
+frozenlist==1.7.0
+fsspec==2025.3.0
+gmpy2 @ file:///croot/gmpy2_1738085463648/work
+hf-xet==1.1.3
+huggingface-hub==0.33.0
+idna==3.10
+importlib_metadata @ file:///croot/importlib_metadata-suite_1732633488278/work
+Jinja2 @ file:///croot/jinja2_1741710844255/work
+lit @ file:///croot/llvm-package_1741800901749/work/llvm/utils/lit
+MarkupSafe @ file:///croot/markupsafe_1738584038848/work
+mkl-service==2.4.0
+mkl_fft @ file:///io/mkl313/mkl_fft_1730824109137/work
+mkl_random @ file:///io/mkl313/mkl_random_1730823916628/work
+mpmath @ file:///croot/mpmath_1690848262763/work
+multidict==6.4.4
+multiprocess==0.70.16
+networkx @ file:///croot/networkx_1737039604450/work
+numpy @ file:///croot/numpy_and_numpy_base_1725470312869/work/dist/numpy-2.0.1-cp310-cp310-linux_x86_64.whl#sha256=120568f3fd675f59e4cb6de79a5c193b4067d90878d8bab2040fda8e3a2df6fa
+opentelemetry-api @ file:///croot/opentelemetry-api_1743171649300/work
+packaging==25.0
+pandas==2.3.0
+propcache==0.3.2
+pyarrow==20.0.0
+python-dateutil==2.9.0.post0
+pytz==2025.2
+PyYAML==6.0.2
+regex==2024.11.6
+requests==2.32.4
+safetensors==0.5.3
+six==1.17.0
+sympy @ file:///croot/sympy_1738108488918/work
+tokenizers==0.21.1
+torch @ file:///opt/conda/conda-bld/libtorch_1745854776362/work
+tqdm==4.67.1
+transformers @ git+https://github.com/huggingface/transformers@9300728665aaeb0ebf4db99f9d9fbce916b4a183
+triton @ file:///croot/triton_1741878695212/work/python
+typing_extensions @ file:///croot/typing_extensions_1734714854207/work
+tzdata==2025.2
+urllib3==2.4.0
+wrapt @ file:///croot/wrapt_1736540904746/work
+xxhash==3.5.0
+yarl==1.20.1
+zipp @ file:///croot/zipp_1732630741423/work
