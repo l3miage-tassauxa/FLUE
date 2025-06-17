@@ -56,7 +56,7 @@ case $1 in
     xnli)
         if [ $2 == true ]; then
             echo "Installing required libraries..."
-            pip install -r ./libraries/xnli-requirements.txt
+            pip install -r ./libraries/XLM-requirements.txt
             cd ./tools
             git clone https://github.com/attardi/wikiextractor.git
             git clone https://github.com/moses-smt/mosesdecoder.git
