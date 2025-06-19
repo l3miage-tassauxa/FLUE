@@ -132,6 +132,9 @@ case $1 in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
+        echo "Calculating accuracy from task 3 predictions..."
+        python ./flue/accuracy_from_task3.py
+        echo "End of XNLI evaluation."
         ;;
     xnli-HF)
         if [ $2 == true ]; then
@@ -165,6 +168,9 @@ case $1 in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
+        echo "Calculating accuracy from task 3 predictions..."
+        python ./flue/accuracy_from_task3.py
+        echo "End of XNLI evaluation."
         ;;
     parse)
         if [ $2 == true ]; then
