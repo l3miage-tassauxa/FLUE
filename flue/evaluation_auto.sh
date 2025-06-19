@@ -41,7 +41,7 @@ case $1 in
             echo "Skipping library installation."
         fi
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py
+        chmod +x ./flue/prepare-data-cls-origin.sh ./flue/extract_split_cls.py ./flue/binarize.py
         chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
         echo "Getting CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
@@ -53,10 +53,50 @@ case $1 in
             tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
             echo "Data unzipped."
         fi
-        echo "Preparing CLS data..."
-        ./flue/prepare-data-cls.sh $DATA_DIR/cls $MODEL_PATH/flaubert_small_cased_xlm true
-        echo "Running CLS evaluation..."
+        echo "Preparing CLS Books data..."
+        ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls/processed/books $MODEL_PATH/flaubert_base_cased_xlm true
+        echo "Running CLS books evaluation..."
         config='flue/examples/cls_books_lr5e6_xlm_base_cased.cfg'
+        source $config
+        python flue/flue_xnli.py --exp_name $exp_name \
+                        --exp_id $exp_id \
+                        --dump_path $dump_path  \
+                        --model_path $model_path  \
+                        --data_path $data_path  \
+                        --dropout $dropout \
+                        --transfer_tasks $transfer_tasks \
+                        --optimizer_e adam,lr=$lre \
+                        --optimizer_p adam,lr=$lrp \
+                        --finetune_layers $finetune_layers \
+                        --batch_size $batch_size \
+                        --n_epochs $num_epochs \
+                        --epoch_size $epoch_size \
+                        --max_len $max_len \
+                        --max_vocab $max_vocab
+        echo "Preparing CLS DVD data..."
+        ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls/processed/dvd $MODEL_PATH/flaubert_base_cased_xlm true
+        echo "Running CLS DVD evaluation..."
+        config='flue/examples/cls_DVD_lr5e6_xlm_base_cased.cfg'
+        source $config
+        python flue/flue_xnli.py --exp_name $exp_name \
+                        --exp_id $exp_id \
+                        --dump_path $dump_path  \
+                        --model_path $model_path  \
+                        --data_path $data_path  \
+                        --dropout $dropout \
+                        --transfer_tasks $transfer_tasks \
+                        --optimizer_e adam,lr=$lre \
+                        --optimizer_p adam,lr=$lrp \
+                        --finetune_layers $finetune_layers \
+                        --batch_size $batch_size \
+                        --n_epochs $num_epochs \
+                        --epoch_size $epoch_size \
+                        --max_len $max_len \
+                        --max_vocab $max_vocab
+        echo "Preparing CLS Music data..."
+        ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls/processed/music $MODEL_PATH/flaubert_base_cased_xlm true
+        echo "Running CLS music evaluation..."
+        config='flue/examples/cls_music_lr5e6_xlm_base_cased.cfg'
         source $config
         python flue/flue_xnli.py --exp_name $exp_name \
                         --exp_id $exp_id \
@@ -105,8 +145,8 @@ case $1 in
             echo "Skipping library installation."
         fi
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py
-        chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
+        chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py ./flue/extract_xnli.py
+        chmod +x ./flue/pretrained_models/flaubert_base_cased_xlm/*
         echo "Getting XNLI data..."
         ./flue/get-data-xnli.sh $DATA_DIR/xnli
         echo "Preparing XNLI data..."
