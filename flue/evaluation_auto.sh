@@ -132,6 +132,9 @@ case $1 in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
+        echo "Calculating accuracy from task 3 predictions..."
+        python ./flue/accuracy_from_task3.py
+        echo "End of XNLI evaluation."
         ;;
     xnli-HF)
         if [ $2 == true ]; then
@@ -168,57 +171,6 @@ case $1 in
         echo "Calculating accuracy from task 3 predictions..."
         python ./flue/accuracy_from_task3.py
         echo "End of XNLI evaluation."
-        ;;
-    xnli-HF)
-        if [ $2 == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Skipping library installation."
-        fi
-        echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/extract_xnli.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
-        chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
-        chmod +x ./flue/accuracy_from_hf.py ./flue/examples/xnli_lr5e6_hf_base_uncased.cfg
-        echo "Getting XNLI data..."
-        ./flue/get-data-xnli.sh $DATA_DIR/xnli
-        echo "Preparing XNLI data..."
-        python flue/extract_xnli.py --indir $DATA_DIR/xnli/processed \
-                                 --outdir $DATA_DIR/xnli/processed \
-                                 --do_lower false
-        echo "Converting TSV files to CSV format..."
-        python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/xnli/processed/
-        echo "Running XNLI evaluation..."
-        config='flue/examples/xnli_lr5e6_hf_base_uncased.cfg'
-        source $config
-        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
-                                        --train_file $data_dir/train.csv \
-                                        --validation_file $data_dir/valid.csv \
-                                        --test_file $data_dir/test.csv \
-                                        --model_name_or_path $model_name_or_path \
-                                        --output_dir $output_dir \
-                                        --max_seq_length $max_seq_length \
-                                        --do_train \
-                                        --do_eval \
-                                        --do_predict \
-                                        --learning_rate $lr \
-                                        --num_train_epochs $epochs \
-                                        --save_steps $save_steps \
-                                        --per_device_train_batch_size $batch_size \
-                                        --per_device_eval_batch_size $batch_size \
-                                        --weight_decay $weight_decay \
-                                        --warmup_steps $warmup_steps \
-                                        --gradient_accumulation_steps $gradient_accumulation_steps \
-                                        --eval_strategy $eval_strategy \
-                                        --save_strategy $save_strategy \
-                                        --overwrite_output_dir \
-                                        |& tee output.log
-        echo "Calculating accuracy from Hugging Face predictions..."
-        echo "Validation accuracy from training:"
-            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Validation accuracy: {data['eval_accuracy']*100:.2f}% on {data['eval_samples']} examples\")"
-        echo "Test accuracy from predictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/xnli/processed/test.label
         ;;
     parse)
         if [ $2 == true ]; then
