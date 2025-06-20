@@ -73,6 +73,8 @@ case $1 in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
+        echo "Calculating accuracy from task 1 predictions..."
+        python flue/accuracy_from_task1.py --logits_file ./experiments/Flaubert/cls_booksxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/books/test.label
         echo "Preparing CLS DVD data..."
         ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls/processed/dvd $MODEL_PATH/flaubert_base_cased_xlm true
         echo "Running CLS DVD evaluation..."
@@ -93,6 +95,8 @@ case $1 in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
+        echo "Calculating accuracy from task 1 predictions..."
+        python flue/accuracy_from_task1.py --logits_file ./experiments/Flaubert/cls_dvdxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/dvd/test.label
         echo "Preparing CLS Music data..."
         ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls/processed/music $MODEL_PATH/flaubert_base_cased_xlm true
         echo "Running CLS music evaluation..."
@@ -113,6 +117,8 @@ case $1 in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
+        echo "Calculating accuracy from task 1 predictions..."
+        python flue/accuracy_from_task1.py --logits_file "./experiments/Flaubert/cls_musicxlm_base_cased/cls_musicxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29" --labels_file "./flue/data/cls/processed/music/test.label"
         ;;
 
     pawsx)
