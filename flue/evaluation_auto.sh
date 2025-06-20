@@ -54,7 +54,7 @@ case $1 in
             echo "Data unzipped."
         fi
         echo "Preparing CLS Books data..."
-        ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls/processed/books $MODEL_PATH/flaubert_base_cased_xlm true
+        ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls $MODEL_PATH/flaubert_base_cased_xlm true
         echo "Running CLS books evaluation..."
         config='flue/examples/cls_books_lr5e6_xlm_base_cased.cfg'
         source $config
@@ -76,7 +76,7 @@ case $1 in
         echo "Calculating accuracy from task 1 predictions..."
         python flue/accuracy_from_task1.py --logits_file ./experiments/Flaubert/cls_booksxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/books/test.label
         echo "Preparing CLS DVD data..."
-        ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls/processed/dvd $MODEL_PATH/flaubert_base_cased_xlm true
+        ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls $MODEL_PATH/flaubert_base_cased_xlm true
         echo "Running CLS DVD evaluation..."
         config='flue/examples/cls_DVD_lr5e6_xlm_base_cased.cfg'
         source $config
@@ -98,7 +98,7 @@ case $1 in
         echo "Calculating accuracy from task 1 predictions..."
         python flue/accuracy_from_task1.py --logits_file ./experiments/Flaubert/cls_dvdxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/dvd/test.label
         echo "Preparing CLS Music data..."
-        ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls/processed/music $MODEL_PATH/flaubert_base_cased_xlm true
+        ./flue/prepare-data-cls-origin.sh $DATA_DIR/cls $MODEL_PATH/flaubert_base_cased_xlm true
         echo "Running CLS music evaluation..."
         config='flue/examples/cls_music_lr5e6_xlm_base_cased.cfg'
         source $config

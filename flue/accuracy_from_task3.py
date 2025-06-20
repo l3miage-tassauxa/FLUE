@@ -1,5 +1,6 @@
 import numpy as np
 from collections import Counter
+import math
 
 # File paths
 logits_file = "./experiments/xnli_xlm_base_cased/dropout_0.1_lre_0.000005_lrp_0.000005/test.pred.9"
@@ -38,6 +39,7 @@ for i in range(total):
         correct += 1
 
 accuracy = correct / total
-print(f"Accuracy: {accuracy * 100:.2f}% on {total} examples.")
+marge = 1.96 * math.sqrt(accuracy * (1 - accuracy) / total) if total > 0 else 0.0
+print(f"Accuracy: {accuracy * 100:.2f}% ± {marge * 100:.2f}% on {total} examples (IC 95%).")
 
 
