@@ -102,14 +102,15 @@ c
     cls-HF)
         if [ $2 == true ]; then
             echo "Installing required libraries..."
-            pip install -r ./libraries/XLM-requirements.txt
+            pip install -r ./libraries/hg-requirements.txt
             echo "Libraries installed."
         else
             echo "Skipping library installation."
         fi
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/prepare-data-cls-origin.sh ./flue/extract_split_cls.py ./flue/binarize.py
+        chmod +x ./flue/prepare-data-cls-origin.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/convert_tsv_to_csv.py
         chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
+        chmod +x ./flue/accuracy_from_hf.py ./flue/examples/cls_books_lr5e6_hf_base_uncased.cfg
         echo "Getting CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You must make a demand for the data at https://zenodo.org/record/3251672"
@@ -123,28 +124,35 @@ c
         echo "Preparing CLS books data..."
         python flue/extract_split_cls.py --indir $DATA_DIR/cls/raw/cls-acl10-unprocessed \
                                  --outdir $DATA_DIR/cls/processed \
-                                 --do_lower true \
+                                 --do_lower false \
                                  --use_hugging_face true
+        echo "Converting TSV files to CSV format..."
+        python flue/convert_tsv_to_csv.py $DATA_DIR/cls/processed/books/
         echo "Running CLS books evaluation..."
         config='flue/examples/cls_books_lr5e6_hf_base_uncased.cfg'
         source $config
-        python ~/transformers/examples/run_glue.py \
-                                        --data_dir $data_dir \
-                                        --model_type flaubert \
+        python ~/transformers/examples/pytorch/text-classification/run_glue.py \
+                                        --train_file $data_dir/train.csv \
+                                        --validation_file $data_dir/valid.csv \
+                                        --test_file $data_dir/test.csv \
                                         --model_name_or_path $model_name_or_path \
-                                        --task_name $task_name \
                                         --output_dir $output_dir \
                                         --max_seq_length 512 \
                                         --do_train \
                                         --do_eval \
+                                        --do_predict \
                                         --learning_rate $lr \
                                         --num_train_epochs $epochs \
                                         --save_steps $save_steps \
-                                        --fp16 \
-                                        --fp16_opt_level O1 \
+                                        --per_device_train_batch_size $batch_size \
+                                        --per_device_eval_batch_size $batch_size \
+                                        --overwrite_output_dir \
                                         |& tee output.log
-        echo "Calculating accuracy from task 1 predictions..."
-        python flue/accuracy_from_task1.py --logits_file ./experiments/Flaubert/cls_booksxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/books/test.label
+        echo "Calculating accuracy from Hugging Face predictions..."
+        echo "Validation accuracy from training:"
+        python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Validation accuracy: {data['eval_accuracy']*100:.2f}% on {data['eval_samples']} examples\")"
+        echo "Test accuracy from predictions:"
+        python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file ./flue/data/cls/processed/books/test.label
         ;;
     pawsx)
         if [ $2 == true ]; then
