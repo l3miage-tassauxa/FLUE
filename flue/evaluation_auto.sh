@@ -108,7 +108,7 @@ c
             echo "Skipping library installation."
         fi
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/prepare-data-cls-origin.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/cls/hg_cls_data_tsv_to_csv.py
+        chmod +x ./flue/prepare-data-cls-origin.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
         chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
         chmod +x ./flue/accuracy_from_hf.py ./flue/examples/cls_books_lr5e6_hf_base_uncased.cfg
         echo "Getting CLS data..."
@@ -127,7 +127,7 @@ c
                                  --do_lower false \
                                  --use_hugging_face true
         echo "Converting TSV files to CSV format..."
-        python flue/data/cls/hg_cls_data_tsv_to_csv.py $DATA_DIR/cls/processed/books/
+        python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/books/
         echo "Running CLS books evaluation..."
         config='flue/examples/cls_books_lr5e6_hf_base_uncased.cfg'
         source $config
