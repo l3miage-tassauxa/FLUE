@@ -130,7 +130,7 @@ case $1 in
         echo "Running CLS books evaluation..."
         config='flue/examples/cls_books_lr5e6_hf_base_uncased.cfg'
         source $config
-        python ~/transformers/examples/pytorch/text-classification/run_glue.py \
+        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
                                         --train_file $data_dir/train.csv \
                                         --validation_file $data_dir/valid.csv \
                                         --test_file $data_dir/test.csv \
@@ -149,9 +149,17 @@ case $1 in
                                         |& tee output.log
         echo "Calculating accuracy from Hugging Face predictions..."
         echo "Validation accuracy from training:"
-        python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Validation accuracy: {data['eval_accuracy']*100:.2f}% on {data['eval_samples']} examples\")"
+        if [ -f "$output_dir/eval_results.json" ]; then
+            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Validation accuracy: {data['eval_accuracy']*100:.2f}% on {data['eval_samples']} examples\")"
+        else
+            echo "Warning: eval_results.json not found at $output_dir/eval_results.json"
+        fi
         echo "Test accuracy from predictions:"
-        python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books/test.label
+        if [ -f "$output_dir/predict_results_None.txt" ]; then
+            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books/test.label
+        else
+            echo "Warning: predict_results_None.txt not found at $output_dir/predict_results_None.txt"
+        fi
         ;;
     pawsx)
         if [ $2 == true ]; then
@@ -166,7 +174,6 @@ case $1 in
         echo "Preparing PAWSX data..."
         ./flue/prepare-data-pawsx.sh $DATA_DIR $MODEL_PATH false
         ;;
-
     xnli-XLM)
         if [ $2 == true ]; then
             echo "Installing required libraries..."
@@ -226,15 +233,15 @@ case $1 in
         echo "Getting XNLI data..."
         ./flue/get-data-xnli.sh $DATA_DIR/xnli
         echo "Preparing XNLI data..."
-        python flue/extract_xnli.py --indir $DATA_DIR/xnli/raw \
+        python flue/extract_xnli.py --indir $DATA_DIR/xnli/processed \
                                  --outdir $DATA_DIR/xnli/processed \
                                  --do_lower false
         echo "Converting TSV files to CSV format..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/xnli/processed/
         echo "Running XNLI evaluation..."
-        config='flue/examples/xnli_lr5e6_hf_base_cased.cfg'
+        config='flue/examples/xnli_lr5e6_hf_base_uncased.cfg'
         source $config
-        python ~/transformers/examples/pytorch/text-classification/run_glue.py \
+        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
                                         --train_file $data_dir/train.csv \
                                         --validation_file $data_dir/valid.csv \
                                         --test_file $data_dir/test.csv \
@@ -253,9 +260,17 @@ case $1 in
                                         |& tee output.log
         echo "Calculating accuracy from Hugging Face predictions..."
         echo "Validation accuracy from training:"
-        python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Validation accuracy: {data['eval_accuracy']*100:.2f}% on {data['eval_samples']} examples\")"
+        if [ -f "$output_dir/eval_results.json" ]; then
+            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Validation accuracy: {data['eval_accuracy']*100:.2f}% on {data['eval_samples']} examples\")"
+        else
+            echo "Warning: eval_results.json not found at $output_dir/eval_results.json"
+        fi
         echo "Test accuracy from predictions:"
-        python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/xnli/processed/test.label
+        if [ -f "$output_dir/predict_results_None.txt" ]; then
+            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/xnli/processed/test.label
+        else
+            echo "Warning: predict_results_None.txt not found at $output_dir/predict_results_None.txt"
+        fi
         ;;
     parse)
         if [ $2 == true ]; then
