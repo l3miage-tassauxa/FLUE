@@ -6,28 +6,88 @@ DATA_DIR=./flue/data
 MODEL_DIR=./flue/pretrained_models/
 MODEL_PATH=$MODEL_DIR
 
-# Check si le premier argument est fourni
+# Vérification du premier argument (tâche)
 if [ -z "$1" ]; then
-        echo "Veuiller spécifier une tache."
-        exit 1
-fi
-# Check si le deuxième argument est fourni
-if [ -z "$2" ]; then
-        echo "Veuiller spécifier si les librairies doivent être installées (true/false)."
+        echo "Usage: ./evaluation_auto.sh <tâche> <installer_libs> [nom_modèle] [fichier_config]"
+        echo "Tâches: cls-HF, xnli-HF, cls-XLM, xnli-XLM, pawsx"
+        echo "Installer libs: true/false"
+        echo "Nom du modèle: flaubert_base_cased, flaubert_base_uncased, camembert_base, etc."
+        echo "Fichier config: chemin vers un fichier de configuration personnalisé (optionnel)"
         exit 1
 fi
 
-# Check si on est dans le dossier FLUE
+# Paramètres
+TASK=$1
+INSTALL_LIBS=$2
+MODEL_NAME=${3:-"flaubert_base_cased"}  # Modèle par défaut
+CUSTOM_CONFIG=$4  # Fichier de configuration personnalisé (optionnel)
+
+# Fonction pour sélectionner le fichier de config
+select_config() {
+    local task=$1
+    local model=$2
+    local custom=$3
+    
+    # Si un fichier de config personnalisé est fourni, l'utiliser
+    if [ ! -z "$custom" ] && [ -f "$custom" ]; then
+        echo "$custom"
+        return
+    fi
+    
+    # Sélection automatique du fichier de config selon la tâche et le modèle
+    case $task in
+        cls-HF)
+            if [ -f "flue/examples/cls_${model}_hf.cfg" ]; then
+                echo "flue/examples/cls_${model}_hf.cfg"
+            else
+                echo "flue/examples/cls_books_lr5e6_hf_base_uncased.cfg"  # configuration par défaut
+            fi
+            ;;
+        xnli-HF)
+            if [ -f "flue/examples/xnli_${model}_hf.cfg" ]; then
+                echo "flue/examples/xnli_${model}_hf.cfg"
+            else
+                echo "flue/examples/xnli_lr5e6_hf_base_uncased.cfg"  # configuration par défaut
+            fi
+            ;;
+        cls-XLM)
+            echo "flue/examples/cls_books_lr5e6_xlm_base_cased.cfg"
+            ;;
+        xnli-XLM)
+            echo "flue/examples/xnli_lr5e6_xlm_base_cased.cfg"
+            ;;
+        pawsx)
+            echo "flue/examples/pawsx_lr5e6_xlm_base_cased.cfg"
+            ;;
+        *)
+            echo "flue/examples/xnli_lr5e6_hf_base_uncased.cfg"  # configuration par défaut générale
+            ;;
+    esac
+}
+
+echo "=== Évaluation FLUE ==="
+echo "Tâche: $TASK"
+echo "Modèle: $MODEL_NAME"
+echo "Installation des librairies: $INSTALL_LIBS"
+if [ ! -z "$CUSTOM_CONFIG" ]; then
+    echo "Configuration personnalisée: $CUSTOM_CONFIG"
+fi
+
+# Vérification du dossier courant
 if [ "$(basename "$PWD")" != "FLUE" ]; then
     echo "Veuillez positionner le terminal dans le dossier FLUE, racine du git."
     exit 1
 fi
 
-# Lance les scripts de préparation des données et d'évaluation en fonction de la tâche spécifiée
-case $1 in
+# Lancement selon la tâche
+case $task in
     cls-XLM)
-        if [ $2 == true ]; then
-            echo "Installing required libraries..."
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
+        fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
             pip install -r ./libraries/XLM-requirements.txt
             cd ./tools
             git clone https://github.com/attardi/wikiextractor.git
@@ -36,26 +96,26 @@ case $1 in
             cd ./fastBPE
             g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
             cd ../..
-            echo "Libraries installed."
+            echo "Librairies installées."
         else
-            echo "Skipping library installation."
+            echo "Installation des librairies ignorée."
         fi
         echo "Ajout des droits d'exécution aux scripts..."
         chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py
         chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
-        echo "Getting CLS data..."
+        echo "Récupération des données CLS..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
-            echo "You must make a demand for the data at https://zenodo.org/record/3251672"
-            echo "and place the file in $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
             exit 1
         else
-            echo "Unzipping data..."
+            echo "Décompression des données..."
             tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
-            echo "Data unzipped."
+            echo "Données décompressées."
         fi
-        echo "Preparing CLS dvd data..."
+        echo "Préparation des données CLS dvd..."
         ./flue/prepare-data-cls.sh $DATA_DIR/cls $MODEL_PATH/flaubert_base_cased_xlm_dvd true
-        echo "Running CLS DVD evaluation..."
+        echo "Lancement de l'évaluation CLS DVD..."
         config='flue/examples/cls_DVD_lr5e6_xlm_base_cased.cfg'
         source $config
         python flue/flue_xnli.py --exp_name $exp_name \
@@ -73,11 +133,11 @@ case $1 in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
-        echo "Calculating accuracy from task 1 predictions..."
+        echo "Calcul de la précision à partir des prédictions de la tâche 1..."
         python flue/accuracy_from_task1.py --logits_file ./experiments/Flaubert/cls_dvdxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/dvd/test.label
-        echo "Preparing CLS music data..."
+        echo "Préparation des données CLS music..."
         ./flue/prepare-data-cls.sh $DATA_DIR/cls $MODEL_PATH/flaubert_base_cased_xlm_music true
-        echo "Running CLS music evaluation..."
+        echo "Lancement de l'évaluation CLS music..."
         config='flue/examples/cls_music_lr5e6_xlm_base_cased.cfg'
         source $config
         python flue/flue_xnli.py --exp_name $exp_name \
@@ -95,40 +155,48 @@ case $1 in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
-        echo "Calculating accuracy from task 1 predictions..."
+        echo "Calcul de la précision à partir des prédictions de la tâche 1..."
         python flue/accuracy_from_task1.py --logits_file "./experiments/Flaubert/cls_musicxlm_base_cased/cls_musicxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29" --labels_file "./flue/data/cls/processed/music/test.label"
         ;;
     cls-HF)
-        if [ $2 == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Skipping library installation."
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
         fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./libraries/hg-requirements.txt
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        
+        # Select config file
+        config=$(select_config "cls-HF" "$MODEL_NAME" "$CUSTOM_CONFIG")
+        echo "Utilisation de la configuration: $config"
+        
         echo "Ajout des droits d'exécution aux scripts..."
         chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
-        chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
-        chmod +x ./flue/accuracy_from_hf.py ./flue/examples/cls_books_lr5e6_hf_base_uncased.cfg
-        echo "Getting CLS data..."
+        chmod +x ./flue/accuracy_from_hf.py
+        echo "Récupération des données CLS..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
-            echo "You must make a demand for the data at https://zenodo.org/record/3251672"
-            echo "and place the file in $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
             exit 1
         else
-            echo "Unzipping data..."
+            echo "Décompression des données..."
             tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
-            echo "Data unzipped."
+            echo "Données décompressées."
         fi
-        echo "Preparing CLS books data..."
+        echo "Préparation des données CLS books..."
         python flue/extract_split_cls.py --indir $DATA_DIR/cls/raw/cls-acl10-unprocessed \
                                  --outdir $DATA_DIR/cls/processed \
                                  --do_lower false \
                                  --use_hugging_face true
-        echo "Converting TSV files to CSV format..."
+        echo "Conversion des fichiers TSV au format CSV..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/books/
-        echo "Running CLS books evaluation..."
-        config='flue/examples/cls_books_lr5e6_hf_base_uncased.cfg'
+        echo "Lancement de l'évaluation CLS books..."
+        export MODEL_NAME
         source $config
         python tools/transformers/examples/pytorch/text-classification/run_glue.py \
                                         --train_file $data_dir/train.csv \
@@ -147,28 +215,36 @@ case $1 in
                                         --per_device_eval_batch_size $batch_size \
                                         --overwrite_output_dir \
                                         |& tee output.log
-        echo "Calculating accuracy from Hugging Face predictions..."
-        echo "Validation accuracy from training:"
-            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Validation accuracy: {data['eval_accuracy']*100:.2f}% on {data['eval_samples']} examples\")"
-        echo "Test accuracy from predictions:"
+        echo "Calcul de la précision à partir des prédictions Hugging Face..."
+        echo "Précision de validation à partir de l'entraînement:"
+            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
+        echo "Précision de test à partir des prédictions:"
             python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books/test.label
         ;;
     pawsx)
-        if [ $2 == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Skipping library installation."
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
         fi
-        echo "Getting PAWSX data..."
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./requirements.txt
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        echo "Récupération des données PAWSX..."
         ./flue/get-data-xnli.sh $DATA_DIR
-        echo "Preparing PAWSX data..."
+        echo "Préparation des données PAWSX..."
         ./flue/prepare-data-pawsx.sh $DATA_DIR $MODEL_PATH false
         ;;
     xnli-XLM)
-        if [ $2 == true ]; then
-            echo "Installing required libraries..."
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
+        fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
             pip install -r ./libraries/XLM-requirements.txt
             cd ./tools
             git clone https://github.com/attardi/wikiextractor.git
@@ -177,18 +253,18 @@ case $1 in
             cd ./fastBPE
             g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
             cd ../..
-            echo "Libraries installed."
+            echo "Librairies installées."
         else
-            echo "Skipping library installation."
+            echo "Installation des librairies ignorée."
         fi
         echo "Ajout des droits d'exécution aux scripts..."
         chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py ./flue/extract_xnli.py
         chmod +x ./flue/pretrained_models/flaubert_base_cased_xlm/*
-        echo "Getting XNLI data..."
+        echo "Récupération des données XNLI..."
         ./flue/get-data-xnli.sh $DATA_DIR/xnli
-        echo "Preparing XNLI data..."
+        echo "Préparation des données XNLI..."
         ./flue/prepare-data-xnli.sh $DATA_DIR/xnli $MODEL_PATH true 
-        echo "Running XNLI evaluation..."
+        echo "Lancement de l'évaluation XNLI..."
         config='flue/examples/xnli_lr5e6_xlm_base_cased.cfg'
         source $config
         python ./flue/flue_xnli.py --exp_name $exp_name \
@@ -206,32 +282,39 @@ case $1 in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
-        echo "Calculating accuracy from task 3 predictions..."
+        echo "Calcul de la précision à partir des prédictions de la tâche 3..."
         python ./flue/accuracy_from_task3.py
-        echo "End of XNLI evaluation."
+        echo "Fin de l'évaluation XNLI."
         ;;
     xnli-HF)
-        if [ $2 == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Skipping library installation."
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
         fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./libraries/hg-requirements.txt
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        
+        config=$(select_config "xnli-HF" "$MODEL_NAME" "$CUSTOM_CONFIG")
+        echo "Utilisation de la configuration: $config"
+        
         echo "Ajout des droits d'exécution aux scripts..."
         chmod +x ./flue/extract_xnli.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
-        chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
-        chmod +x ./flue/accuracy_from_hf.py ./flue/examples/xnli_lr5e6_hf_base_uncased.cfg
-        echo "Getting XNLI data..."
+        chmod +x ./flue/accuracy_from_hf.py
+        echo "Récupération des données XNLI..."
         ./flue/get-data-xnli.sh $DATA_DIR/xnli
-        echo "Preparing XNLI data..."
+        echo "Préparation des données XNLI..."
         python flue/extract_xnli.py --indir $DATA_DIR/xnli/processed \
                                  --outdir $DATA_DIR/xnli/processed \
                                  --do_lower false
-        echo "Converting TSV files to CSV format..."
+        echo "Conversion des fichiers TSV au format CSV..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/xnli/processed/
-        echo "Running XNLI evaluation..."
-        config='flue/examples/xnli_lr5e6_hf_base_uncased.cfg'
+        echo "Lancement de l'évaluation XNLI..."
+        export MODEL_NAME
         source $config
         python tools/transformers/examples/pytorch/text-classification/run_glue.py \
                                         --train_file $data_dir/train.csv \
@@ -255,37 +338,45 @@ case $1 in
                                         --save_strategy $save_strategy \
                                         --overwrite_output_dir \
                                         |& tee output.log
-        echo "Calculating accuracy from Hugging Face predictions..."
-        echo "Validation accuracy from training:"
-            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Validation accuracy: {data['eval_accuracy']*100:.2f}% on {data['eval_samples']} examples\")"
-        echo "Test accuracy from predictions:"
+        echo "Calcul de la précision à partir des prédictions Hugging Face..."
+        echo "Précision de validation à partir de l'entraînement:"
+            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
+        echo "Précision de test à partir des prédictions:"
             python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/xnli/processed/test.label
         ;;
     parse)
-        if [ $2 == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/xnli-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Skipping library installation."
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
         fi
-        echo "Getting Parse data..."
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./libraries/xnli-requirements.txt
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        echo "Récupération des données Parse..."
         ./flue/get-data-parse.sh $DATA_DIR
-        echo "Preparing Parse data..."
+        echo "Préparation des données Parse..."
         ./flue/prepare-data-parse.sh $DATA_DIR $MODEL_PATH false
         ;;
     wsd)
-        if [ $2 == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Skipping library installation."
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
         fi
-        echo "Getting WSD data..."
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./requirements.txt
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        echo "Récupération des données WSD..."
         FSE_DIR=./Data/FSE-1.1-191210
         python ./flue/prepare_data.py --data $FSE_DIR --output $DATA_DIR
-        echo "Preparing WSD data..."
+        echo "Préparation des données WSD..."
         ./flue/prepare-data-wsd.sh $DATA_DIR $MODEL_PATH false
         ;;
     *)
