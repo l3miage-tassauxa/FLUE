@@ -22,49 +22,6 @@ INSTALL_LIBS=$2
 MODEL_NAME=${3:-"flaubert_base_cased"}  # Modèle par défaut
 CUSTOM_CONFIG=$4  # Fichier de configuration personnalisé (optionnel)
 
-# Fonction pour sélectionner le fichier de config
-select_config() {
-    local task=$1
-    local model=$2
-    local custom=$3
-    
-    # Si un fichier de config personnalisé est fourni, l'utiliser
-    if [ ! -z "$custom" ] && [ -f "$custom" ]; then
-        echo "$custom"
-        return
-    fi
-    
-    # Sélection automatique du fichier de config selon la tâche et le modèle
-    case $task in
-        cls-HF)
-            if [ -f "flue/examples/cls_${model}_hf.cfg" ]; then
-                echo "flue/examples/cls_${model}_hf.cfg"
-            else
-                echo "flue/examples/cls_books_lr5e6_hf_base_uncased.cfg"  # configuration par défaut
-            fi
-            ;;
-        xnli-HF)
-            if [ -f "flue/examples/xnli_${model}_hf.cfg" ]; then
-                echo "flue/examples/xnli_${model}_hf.cfg"
-            else
-                echo "flue/examples/xnli_lr5e6_hf_base_uncased.cfg"  # configuration par défaut
-            fi
-            ;;
-        cls-XLM)
-            echo "flue/examples/cls_books_lr5e6_xlm_base_cased.cfg"
-            ;;
-        xnli-XLM)
-            echo "flue/examples/xnli_lr5e6_xlm_base_cased.cfg"
-            ;;
-        pawsx)
-            echo "flue/examples/pawsx_lr5e6_xlm_base_cased.cfg"
-            ;;
-        *)
-            echo "flue/examples/xnli_lr5e6_hf_base_uncased.cfg"  # configuration par défaut générale
-            ;;
-    esac
-}
-
 echo "=== Évaluation FLUE ==="
 echo "Tâche: $TASK"
 echo "Modèle: $MODEL_NAME"
@@ -80,7 +37,7 @@ if [ "$(basename "$PWD")" != "FLUE" ]; then
 fi
 
 # Lancement selon la tâche
-case $task in
+case $TASK in
     cls-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
@@ -100,6 +57,14 @@ case $task in
         else
             echo "Installation des librairies ignorée."
         fi
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/cls_books_lr5e6_xlm_base_cased.cfg"
+        fi
+        echo "Utilisation de la configuration: $config"
+        
         echo "Ajout des droits d'exécution aux scripts..."
         chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py
         chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
@@ -171,8 +136,11 @@ case $task in
             echo "Installation des librairies ignorée."
         fi
         
-        # Select config file
-        config=$(select_config "cls-HF" "$MODEL_NAME" "$CUSTOM_CONFIG")
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/cls_books_lr5e6_hf_base_uncased.cfg"  # configuration par défaut
+        fi
         echo "Utilisation de la configuration: $config"
         
         echo "Ajout des droits d'exécution aux scripts..."
@@ -233,6 +201,14 @@ case $task in
         else
             echo "Installation des librairies ignorée."
         fi
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/pawsx_lr5e6_xlm_base_cased.cfg"
+        fi
+        echo "Utilisation de la configuration: $config"
+        
         echo "Récupération des données PAWSX..."
         ./flue/get-data-xnli.sh $DATA_DIR
         echo "Préparation des données PAWSX..."
@@ -257,6 +233,14 @@ case $task in
         else
             echo "Installation des librairies ignorée."
         fi
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/xnli_lr5e6_xlm_base_cased.cfg"
+        fi
+        echo "Utilisation de la configuration: $config"
+        
         echo "Ajout des droits d'exécution aux scripts..."
         chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py ./flue/extract_xnli.py
         chmod +x ./flue/pretrained_models/flaubert_base_cased_xlm/*
@@ -265,7 +249,6 @@ case $task in
         echo "Préparation des données XNLI..."
         ./flue/prepare-data-xnli.sh $DATA_DIR/xnli $MODEL_PATH true 
         echo "Lancement de l'évaluation XNLI..."
-        config='flue/examples/xnli_lr5e6_xlm_base_cased.cfg'
         source $config
         python ./flue/flue_xnli.py --exp_name $exp_name \
                         --exp_id $exp_id \
@@ -299,20 +282,27 @@ case $task in
             echo "Installation des librairies ignorée."
         fi
         
-        config=$(select_config "xnli-HF" "$MODEL_NAME" "$CUSTOM_CONFIG")
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/xnli_lr5e6_hf_base_uncased.cfg"  # configuration par défaut
+        fi
         echo "Utilisation de la configuration: $config"
         
         echo "Ajout des droits d'exécution aux scripts..."
         chmod +x ./flue/extract_xnli.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
         chmod +x ./flue/accuracy_from_hf.py
+
         echo "Récupération des données XNLI..."
         ./flue/get-data-xnli.sh $DATA_DIR/xnli
+
         echo "Préparation des données XNLI..."
         python flue/extract_xnli.py --indir $DATA_DIR/xnli/processed \
                                  --outdir $DATA_DIR/xnli/processed \
                                  --do_lower false
         echo "Conversion des fichiers TSV au format CSV..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/xnli/processed/
+        
         echo "Lancement de l'évaluation XNLI..."
         export MODEL_NAME
         source $config
@@ -336,6 +326,7 @@ case $task in
                                         --gradient_accumulation_steps $gradient_accumulation_steps \
                                         --eval_strategy $eval_strategy \
                                         --save_strategy $save_strategy \
+                                        --trust_remote_code \
                                         --overwrite_output_dir \
                                         |& tee output.log
         echo "Calcul de la précision à partir des prédictions Hugging Face..."
