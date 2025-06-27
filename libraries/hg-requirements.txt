@@ -22,12 +22,11 @@ importlib_metadata
 jinja2
 joblib==1.5.1
 markupsafe
-mkl-service==2.4.0
 mpmath
 multidict==6.4.4
 multiprocess==0.70.16
 networkx
-numpy
+numpy<2.0
 opentelemetry-api
 packaging==25.0
 pandas==2.3.0
@@ -48,7 +47,7 @@ six==1.17.0
 sympy
 threadpoolctl==3.6.0
 tokenizers==0.21.1
-torch
+torch==2.1.0
 tqdm==4.67.1
 git+https://github.com/huggingface/transformers.git@4b8ec667e9919350982e47838bae9f78c7f988a8
 triton
