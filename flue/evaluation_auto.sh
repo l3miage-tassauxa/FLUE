@@ -9,7 +9,7 @@ MODEL_PATH=$MODEL_DIR
 # Vérification du premier argument (tâche)
 if [ -z "$1" ]; then
         echo "Usage: ./evaluation_auto.sh <tâche> <installer_libs> [nom_modèle] [fichier_config]"
-        echo "Tâches: cls-HF, xnli-HF, cls-XLM, xnli-XLM, pawsx"
+        echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-HF, xnli-HF, xnli-XLM, pawsx"
         echo "Installer libs: true/false"
         echo "Nom du modèle: flaubert_base_cased, flaubert_base_uncased, camembert_base, etc."
         echo "Fichier config: chemin vers un fichier de configuration personnalisé (optionnel)"
@@ -38,7 +38,7 @@ fi
 
 # Lancement selon la tâche
 case $TASK in
-    cls-XLM)
+    cls-books-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
             exit 1
@@ -78,10 +78,9 @@ case $TASK in
             tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
             echo "Données décompressées."
         fi
-        echo "Préparation des données CLS dvd..."
-        ./flue/prepare-data-cls.sh $DATA_DIR/cls $MODEL_PATH/flaubert_base_cased_xlm_dvd true
-        echo "Lancement de l'évaluation CLS DVD..."
-        config='flue/examples/cls_DVD_lr5e6_xlm_base_cased.cfg'
+        echo "Préparation des données CLS books..."
+        ./flue/prepare-data-cls.sh $DATA_DIR/cls $MODEL_PATH/flaubert_base_cased_xlm_books true
+        echo "Lancement de l'évaluation CLS books..."
         source $config
         python flue/flue_xnli.py --exp_name $exp_name \
                         --exp_id $exp_id \
@@ -98,12 +97,52 @@ case $TASK in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
-        echo "Calcul de la précision à partir des prédictions de la tâche 1..."
-        python flue/accuracy_from_task1.py --logits_file ./experiments/Flaubert/cls_dvdxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/dvd/test.label
+        echo "Calcul de la précision à partir des prédictions de la tâche books..."
+        python flue/accuracy_from_task1.py --logits_file ./experiments/Flaubert/cls_booksxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/books/test.label
+        ;;
+    cls-music-XLM)
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
+        fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./libraries/XLM-requirements.txt
+            cd ./tools
+            git clone https://github.com/attardi/wikiextractor.git
+            git clone https://github.com/moses-smt/mosesdecoder.git
+            git clone https://github.com/glample/fastBPE.git
+            cd ./fastBPE
+            g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
+            cd ../..
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/cls_music_lr5e6_xlm_base_cased.cfg"
+        fi
+        echo "Utilisation de la configuration: $config"
+        
+        echo "Ajout des droits d'exécution aux scripts..."
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py
+        chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
+        echo "Récupération des données CLS..."
+        if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
+            echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            exit 1
+        else
+            echo "Décompression des données..."
+            tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
+            echo "Données décompressées."
+        fi
         echo "Préparation des données CLS music..."
         ./flue/prepare-data-cls.sh $DATA_DIR/cls $MODEL_PATH/flaubert_base_cased_xlm_music true
         echo "Lancement de l'évaluation CLS music..."
-        config='flue/examples/cls_music_lr5e6_xlm_base_cased.cfg'
         source $config
         python flue/flue_xnli.py --exp_name $exp_name \
                         --exp_id $exp_id \
@@ -120,8 +159,78 @@ case $TASK in
                         --epoch_size $epoch_size \
                         --max_len $max_len \
                         --max_vocab $max_vocab
-        echo "Calcul de la précision à partir des prédictions de la tâche 1..."
+        echo "Calcul de la précision à partir des prédictions de la tâche music..."
         python flue/accuracy_from_task1.py --logits_file "./experiments/Flaubert/cls_musicxlm_base_cased/cls_musicxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29" --labels_file "./flue/data/cls/processed/music/test.label"
+        ;;
+    cls-dvd-XLM)
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
+        fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./libraries/XLM-requirements.txt
+            cd ./tools
+            git clone https://github.com/attardi/wikiextractor.git
+            git clone https://github.com/moses-smt/mosesdecoder.git
+            git clone https://github.com/glample/fastBPE.git
+            cd ./fastBPE
+            g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
+            cd ../..
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/cls_DVD_lr5e6_xlm_base_cased.cfg"
+        fi
+        echo "Utilisation de la configuration: $config"
+        
+        echo "Ajout des droits d'exécution aux scripts..."
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py
+        chmod +x ./flue/pretrained_models/flaubert_small_cased_xlm/*
+        echo "Récupération des données CLS..."
+        if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
+            echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            exit 1
+        else
+            echo "Décompression des données..."
+            tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
+            echo "Données décompressées."
+        fi
+        echo "Préparation des données CLS dvd..."
+        ./flue/prepare-data-cls.sh $DATA_DIR/cls $MODEL_PATH/flaubert_base_cased_xlm_dvd true
+        echo "Lancement de l'évaluation CLS DVD..."
+        source $config
+        python flue/flue_xnli.py --exp_name $exp_name \
+                        --exp_id $exp_id \
+                        --dump_path $dump_path  \
+                        --model_path $model_path  \
+                        --data_path $data_path  \
+                        --dropout $dropout \
+                        --transfer_tasks $transfer_tasks \
+                        --optimizer_e adam,lr=$lre \
+                        --optimizer_p adam,lr=$lrp \
+                        --finetune_layers $finetune_layers \
+                        --batch_size $batch_size \
+                        --n_epochs $num_epochs \
+                        --epoch_size $epoch_size \
+                        --max_len $max_len \
+                        --max_vocab $max_vocab
+        echo "Calcul de la précision à partir des prédictions de la tâche DVD..."
+        python flue/accuracy_from_task1.py --logits_file ./experiments/Flaubert/cls_dvdxlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/dvd/test.label
+        ;;
+    cls-XLM)
+        echo "La tâche cls-XLM a été séparée en trois tâches distinctes:"
+        echo "  - cls-books-XLM pour l'évaluation sur les livres"
+        echo "  - cls-music-XLM pour l'évaluation sur la musique"  
+        echo "  - cls-dvd-XLM pour l'évaluation sur les DVD"
+        echo "Veuillez utiliser une de ces tâches spécifiques."
+        exit 1
         ;;
     cls-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -372,7 +481,7 @@ case $TASK in
         ;;
     *)
         echo "Veuiller spécifier une tache valide."
-        echo "Tâches valides: cls-XLM, pawsx, xnli-HF, xnli-XLM, parse, wsd"
+        echo "Tâches valides: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-HF, xnli-HF, xnli-XLM, pawsx, parse, wsd"
         exit 1
         ;;
 esac
