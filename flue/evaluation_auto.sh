@@ -9,7 +9,7 @@ MODEL_PATH=$MODEL_DIR
 # Vérification du premier argument (tâche)
 if [ -z "$1" ]; then
         echo "Usage: ./evaluation_auto.sh <tâche> <installer_libs> [nom_modèle] [fichier_config]"
-        echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-HF, xnli-HF, xnli-XLM, pawsx"
+        echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-HF, xnli-HF, xnli-XLM, pawsx, parse, wsd"
         echo "Installer libs: true/false"
         echo "Nom du modèle: flaubert_base_cased, flaubert_base_uncased, camembert_base, etc."
         echo "Fichier config: chemin vers un fichier de configuration personnalisé (optionnel)"
@@ -231,7 +231,7 @@ case $TASK in
         echo "Veuillez utiliser une de ces tâches spécifiques."
         exit 1
         ;;
-    cls-HF)
+    cls-books-HF)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
             exit 1
@@ -467,16 +467,74 @@ case $TASK in
         fi
         if [ $INSTALL_LIBS == true ]; then
             echo "Installation des librairies requises..."
-            pip install -r ./requirements.txt
+            pip install -r ./libraries/hg-requirements.txt
             echo "Librairies installées."
         else
             echo "Installation des librairies ignorée."
         fi
-        echo "Récupération des données WSD..."
-        FSE_DIR=./Data/FSE-1.1-191210
-        python ./flue/prepare_data.py --data $FSE_DIR --output $DATA_DIR
-        echo "Préparation des données WSD..."
-        ./flue/prepare-data-wsd.sh $DATA_DIR $MODEL_PATH false
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            echo "Configuration personnalisée: $CUSTOM_CONFIG (non utilisée pour WSD)"
+        fi
+        echo "Modèle utilisé: $MODEL_NAME"
+        
+        echo "Ajout des droits d'exécution aux scripts WSD..."
+        chmod +x ./flue/wsd/verbs/flue_vsd.py ./flue/wsd/verbs/run_model.py ./flue/wsd/verbs/prepare_data.py ./flue/wsd/verbs/wsd_evaluation.py
+        
+        echo "Vérification des données WSD..."
+        if [ ! -d "$DATA_DIR/wsd/FSE-1.1-10_12_19" ]; then
+            echo "Erreur: Les données WSD ne sont pas disponibles dans $DATA_DIR/wsd/"
+            echo "Veuillez télécharger le dataset FrenchSemEval (FSE) depuis http://www.llf.cnrs.fr/dataset/fse/"
+            echo "et l'extraire dans le dossier $DATA_DIR/wsd/"
+            exit 1
+        else
+            echo "Données WSD trouvées."
+        fi
+        
+        # Préparation des données WSD
+        echo "Préparation des données WSD pour l'évaluation..."
+        cd flue/wsd/verbs
+        python prepare_data.py --data ../../../$DATA_DIR/wsd/FSE-1.1-10_12_19/FSE-1.1-191210 --output ../../../$DATA_DIR/wsd/processed
+        cd ../../..
+        
+        # Création du dossier d'expérience si nécessaire
+        mkdir -p ./flue/experiments/wsd_${MODEL_NAME}
+        
+        # Lancement de l'évaluation WSD avec le modèle spécifié
+        echo "Lancement de l'évaluation WSD avec le modèle $MODEL_NAME..."
+        cd flue/wsd/verbs
+        
+        # Détection automatique du device (GPU si disponible, sinon CPU)
+        DEVICE=-1
+        if command -v nvidia-smi >/dev/null 2>&1; then
+            if nvidia-smi >/dev/null 2>&1; then
+                DEVICE=0
+                echo "GPU détecté, utilisation du GPU."
+            else
+                echo "GPU non disponible, utilisation du CPU."
+            fi
+        else
+            echo "NVIDIA non détecté, utilisation du CPU."
+        fi
+        
+        python flue_vsd.py --exp_name wsd_${MODEL_NAME}_evaluation \
+                          --model $MODEL_NAME \
+                          --data ../../../$DATA_DIR/wsd/processed \
+                          --padding 80 \
+                          --batchsize 32 \
+                          --device $DEVICE \
+                          --output ../../../flue/experiments/wsd_${MODEL_NAME} \
+                          --output_logs ../../../flue/experiments/wsd_${MODEL_NAME}/evaluation_logs.csv \
+                          --output_pred ../../../flue/experiments/wsd_${MODEL_NAME}/predictions.txt \
+                          --output_score ../../../flue/experiments/wsd_${MODEL_NAME}/scores.csv
+        cd ../../..
+        
+        echo "Évaluation WSD terminée."
+        echo "Résultats disponibles dans: ./flue/experiments/wsd_${MODEL_NAME}/"
+        if [ -f "./flue/experiments/wsd_${MODEL_NAME}/scores.csv" ]; then
+            echo "Scores d'évaluation:"
+            cat ./flue/experiments/wsd_${MODEL_NAME}/scores.csv
+        fi
         ;;
     *)
         echo "Veuiller spécifier une tache valide."
