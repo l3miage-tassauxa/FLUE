@@ -24,21 +24,27 @@ def get_labels(line, do_lower=False):
     sent1, sent2, label = line.split('\t')
     sent1 = cleaner(sent1, rm_new_lines=True, do_lower=do_lower)
     sent2 = cleaner(sent2, rm_new_lines=True, do_lower=do_lower)
-    sent_pair = '\t'.join([sent1, sent2])
+    # For Hugging Face, combine sentences with [SEP] token
+    combined_text = sent1 + " [SEP] " + sent2
     label = label.strip()
 
-    return sent_pair, label
+    return combined_text, label
 
 
 def main():
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--indir', type=str, help='Path to processed data directory')
+    parser.add_argument('--outdir', type=str, default=None, help='Path to output data directory')
     parser.add_argument('--do_lower', type=bool_flag, default='False', help='True if do lower case, False otherwise.')
 
     args = parser.parse_args()
 
-    path = os.path.expanduser(args.indir)
+    input_path = os.path.expanduser(args.indir)
+    output_path = os.path.expanduser(args.outdir) if args.outdir else input_path
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(output_path, exist_ok=True)
 
     splts = ['valid', 'test', 'train']
     lang = 'fr'
@@ -47,21 +53,22 @@ def main():
         sent_pairs = []
         labels = []
 
-        with open(os.path.join(path, lang+'.raw.'+s), 'rt', encoding='utf-8') as f_in:
+        with open(os.path.join(input_path, lang+'.raw.'+s), 'rt', encoding='utf-8') as f_in:
             next(f_in)
-            with open(os.path.join(path, '{}_0.xlm.tsv'.format(s)), 'w') as f_out:
+            # Create TSV file for Hugging Face conversion
+            with open(os.path.join(output_path, '{}.tsv'.format(s)), 'w') as f_out:
                 tsv_output = csv.writer(f_out, delimiter='\t')
                 for line in f_in:
-                    sent_pair, label = get_labels(line, do_lower=args.do_lower)
-                    sent_pairs.append(sent_pair)
+                    combined_text, label = get_labels(line, do_lower=args.do_lower)
+                    sent_pairs.append(combined_text)
                     labels.append(label)
 
-                    tsv_output.writerow([sent_pair, label])
+                    tsv_output.writerow([combined_text, label])
 
         assert len(sent_pairs) == len(labels)
 
-        print('Finished writing {}.review to {}. Neutral/Contradiction/Entailment: {}/{}/{}'.format(s, 
-                                                                                                path, 
+        print('Finished writing {}.tsv to {}. Neutral/Contradiction/Entailment: {}/{}/{}'.format(s, 
+                                                                                                output_path, 
                                                                                                 labels.count('neutral'),
                                                                                                 labels.count('contradiction'),
                                                                                                 labels.count('entailment')))

@@ -62,7 +62,7 @@ def main():
                 tsv_output = csv.writer(f_out, delimiter='\t')
                 for i, line in enumerate(f_in):
                     if i == 0 and args.use_hugging_face:
-                        tsv_output.writerow(['Label', '', '', 'Sent1', 'Sent2'])
+                        tsv_output.writerow(['label', '', '', 'sentence1', 'sentence2'])
                     sent_pair, label = get_labels(line, do_lower=args.do_lower)
                     if len(sent_pair.split()) > 5:
                         sent_pairs.append(sent_pair)
