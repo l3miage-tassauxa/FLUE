@@ -22,3 +22,13 @@ output.log
 tools/fastBPE
 tools/mosesdecoder
 tools/wikiextractor
+
+# Large data files - should not be in version control
+flue/data/wsd/FSE-1.1-10_12_19/
+flue/data/cls/raw/
+flue/data/cls/processed/
+flue/data/xnli/raw/
+flue/data/xnli/processed/
+*.xml
+*.tar.gz
+*.zip
