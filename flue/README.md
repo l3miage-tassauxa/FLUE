@@ -221,13 +221,6 @@ export BATCH_SIZE=16
 bash ./flue/evaluation_auto.sh xnli-HF false
 ```
 
-### Support Multi-GPU
-
-Pour utiliser plusieurs GPU, modifiez votre demande OAR :
-```bash
-oarsub -l /host=1/gpu=4,walltime=48:0:0 './tache.sh xnli-HF true mon_modele'
-```
-
 ### Métriques d'Évaluation Personnalisées
 
 Ajoutez vos propres scripts d'évaluation en suivant le modèle de :

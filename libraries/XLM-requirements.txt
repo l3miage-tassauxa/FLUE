@@ -1,6 +1,7 @@
 certifi==2025.4.26
 charset-normalizer==3.4.2
 click==8.1.8
+faiss-gpu==1.7.2
 filelock==3.16.1
 fsspec==2025.3.0
 hf-xet==1.1.3
@@ -11,8 +12,8 @@ joblib==1.4.2
 lxml==5.4.0
 MarkupSafe==2.1.5
 mkl-service==2.4.0
-mkl_fft
-mkl_random
+mkl_fft @ file:///io/mkl313/mkl_fft_1730824109137/work
+mkl_random @ file:///io/mkl313/mkl_random_1730823916628/work
 mpmath==1.3.0
 networkx==3.1
 numpy==1.24.4
@@ -36,6 +37,7 @@ regex==2024.11.6
 requests==2.32.3
 safetensors==0.5.3
 scikit-learn==1.3.2
+scipy @ file:///croot/scipy_1747238027288/work/dist/scipy-1.15.3-cp310-cp310-linux_x86_64.whl#sha256=4055d6b52bbbfc19594ac7c25008889945de175e153afc0935b6415716fa348e
 six==1.17.0
 sympy==1.13.3
 threadpoolctl==3.5.0
