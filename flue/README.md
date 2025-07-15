@@ -65,16 +65,6 @@ bash ./flue/evaluation_auto.sh cls-HF false camembert-base
 bash ./flue/evaluation_auto.sh xnli-HF true mon_modele chemin/vers/ma_config.cfg
 ```
 
-### 4. Utilisation avec OAR (Planificateur de Tâches)
-
-```bash
-# Exécuter via OAR avec le wrapper tache.sh
-oarsub -l /host=1/gpu=1,walltime=48:0:0 './tache.sh xnli-HF true mon_modele'
-
-# Ou directement
-oarsub -l /host=1/gpu=1,walltime=48:0:0 'bash ./flue/evaluation_auto.sh cls-HF false camembert-base'
-```
-
 ## Configuration des Modèles
 
 ### Structure des Répertoires
