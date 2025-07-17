@@ -244,6 +244,13 @@ case $TASK in
             echo "Librairies installées."
         else
             echo "Installation des librairies ignorée."
+            echo "Vérification de l'installation de MLflow..."
+            if ! command -v mlflow &> /dev/null; then
+                echo "⚠️  MLflow n'est pas installé. Installation automatique..."
+                pip install mlflow
+            else
+                echo "✅ MLflow est déjà installé."
+            fi
         fi
         
         if [ ! -z "$CUSTOM_CONFIG" ]; then

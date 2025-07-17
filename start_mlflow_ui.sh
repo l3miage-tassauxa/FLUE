@@ -4,9 +4,23 @@
 
 echo "=== Lancement de MLflow UI ==="
 
+# Activer l'environnement conda si disponible
+if command -v conda &> /dev/null; then
+    echo "Activation de l'environnement hf-finetune..."
+    eval "$(conda shell.bash hook)"
+    conda activate hf-finetune
+    
+    if [ $? -eq 0 ]; then
+        echo "✅ Environnement hf-finetune activé"
+    else
+        echo "⚠️  Impossible d'activer hf-finetune, utilisation de l'environnement par défaut"
+    fi
+fi
+
 # Vérifier si MLflow est installé
 if ! command -v mlflow &> /dev/null; then
-    echo "MLflow n'est pas installé. Veuillez l'installer avec: pip install mlflow"
+    echo "❌ MLflow n'est pas installé ou n'est pas accessible."
+    echo "Pour installer MLflow, exécutez: ./install_mlflow.sh"
     exit 1
 fi
 
@@ -23,9 +37,11 @@ if [ "$(basename "$PWD")" != "FLUE" ]; then
 fi
 
 echo "Démarrage de l'interface MLflow..."
-echo "L'interface sera disponible sur: http://localhost:5000"
+echo "L'interface sera disponible sur:"
+echo "  - http://localhost:5000 (depuis Windows)"
+echo "  - http://127.0.0.1:5000 (alternative)"
 echo "Appuyez sur Ctrl+C pour arrêter l'interface."
 echo ""
 
 # Lancer MLflow UI
-mlflow ui --backend-store-uri ./mlflow_logs --host 0.0.0.0 --port 5000
+mlflow ui --backend-store-uri ./mlflow_logs --host 127.0.0.1 --port 5000
