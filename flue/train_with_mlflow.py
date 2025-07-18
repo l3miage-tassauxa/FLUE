@@ -64,31 +64,43 @@ def run_training(args):
         "python", "tools/transformers/examples/pytorch/text-classification/run_glue.py",
         "--train_file", args.train_file,
         "--validation_file", args.validation_file,
-        "--test_file", args.test_file,
         "--model_name_or_path", args.model_name_or_path,
         "--output_dir", args.output_dir,
         "--max_seq_length", str(args.max_seq_length),
         "--do_train",
         "--do_eval",
-        "--do_predict",
         "--learning_rate", str(args.learning_rate),
         "--num_train_epochs", str(args.num_train_epochs),
-        "--save_steps", str(args.save_steps),
         "--per_device_train_batch_size", str(args.per_device_train_batch_size),
         "--per_device_eval_batch_size", str(args.per_device_eval_batch_size),
         "--overwrite_output_dir",
         "--logging_steps", "50",  # Log more frequently for MLflow
-        "--evaluation_strategy", "steps",
-        "--eval_steps", str(args.save_steps),
-        "--save_strategy", "steps",
-        "--load_best_model_at_end", "True",
+        "--eval_strategy", "epoch",  # Correct parameter name
+        "--save_strategy", "no",  # Disable intermediate saving to avoid DTensor error
+        "--save_only_model",  # Save only model, not optimizer states
         "--metric_for_best_model", "accuracy",
         "--report_to", "none"  # Disable default reporting
     ]
     
+    # Add test file and do_predict only if test file exists
+    if args.test_file and os.path.exists(args.test_file):
+        cmd.extend(["--test_file", args.test_file, "--do_predict"])
+    
     # Run the training
     print(f"Executing: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    # Log the output for debugging
+    if result.returncode != 0:
+        print(f"Training failed with return code: {result.returncode}")
+        print(f"STDOUT: {result.stdout}")
+        print(f"STDERR: {result.stderr}")
+        mlflow.log_param("training_status", "failed")
+        mlflow.log_param("error_code", result.returncode)
+        if result.stderr:
+            mlflow.log_text(result.stderr, "training_error.log")
+        if result.stdout:
+            mlflow.log_text(result.stdout, "training_output.log")
     
     return result
 
@@ -206,15 +218,23 @@ def main():
         # Run training
         result = run_training(args)
         
-        if result.returncode != 0:
-            print(f"Training failed with return code: {result.returncode}")
-            print(f"STDOUT: {result.stdout}")
-            print(f"STDERR: {result.stderr}")
-            mlflow.log_param("training_status", "failed")
-            sys.exit(result.returncode)
-        else:
-            print("Training completed successfully!")
-            mlflow.log_param("training_status", "success")
+        # Check if training failed and handle it properly
+        if hasattr(result, 'returncode') and isinstance(result.returncode, int):
+            if result.returncode != 0:
+                print(f"Training failed, but continuing to log available data...")
+                # Still try to log any artifacts that might exist
+                try:
+                    log_metrics_and_artifacts(args, args.output_dir)
+                except Exception as log_error:
+                    print(f"Error logging artifacts after failed training: {log_error}")
+                return result.returncode
+        elif isinstance(result, int):
+            # If run_training returned an error code directly
+            if result != 0:
+                return result
+        
+        print("Training completed successfully!")
+        mlflow.log_param("training_status", "success")
         
         # Log metrics and artifacts
         log_metrics_and_artifacts(args, args.output_dir)
@@ -239,6 +259,9 @@ def main():
     except Exception as e:
         print(f"Error during training: {e}")
         mlflow.log_param("error", str(e))
+        mlflow.log_param("training_status", "failed")
+        import traceback
+        mlflow.log_text(traceback.format_exc(), "error_traceback.log")
         raise
     finally:
         mlflow.end_run()

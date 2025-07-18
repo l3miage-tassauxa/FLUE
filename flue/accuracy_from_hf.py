@@ -13,12 +13,23 @@ args = parser.parse_args()
 
 # Read predictions from Hugging Face output
 preds = []
+# XNLI label mapping
+label_map = {'entailment': 0, 'neutral': 1, 'contradiction': 2}
+
 with open(args.predictions_file) as f:
     next(f)  # Skip header line
     for line in f:
         parts = line.strip().split('\t')
         if len(parts) >= 2:
-            pred = int(parts[1])  # Second column is the prediction
+            pred_str = parts[1]  # Second column is the prediction
+            # Handle both string and numeric predictions
+            if pred_str.isdigit():
+                pred = int(pred_str)
+            elif pred_str in label_map:
+                pred = label_map[pred_str]
+            else:
+                print(f"Warning: Unknown prediction label '{pred_str}', skipping...")
+                continue
             preds.append(pred)
 
 # Read gold labels
@@ -27,7 +38,14 @@ with open(args.labels_file) as f:
     for line in f:
         label = line.strip()
         if label:
-            gold.append(int(label))
+            # Handle both string and numeric labels
+            if label.isdigit():
+                gold.append(int(label))
+            elif label in label_map:
+                gold.append(label_map[label])
+            else:
+                print(f"Warning: Unknown gold label '{label}', skipping...")
+                continue
 
 # Calculate accuracy
 total = min(len(preds), len(gold))

@@ -420,8 +420,8 @@ case $TASK in
         echo "Utilisation de la configuration: $config"
         
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/extract_xnli.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_from_hf.py
+        chmod +x ./flue/get-data-xnli.sh ./flue/extract_xnli.py ./flue/binarize.py 
+        chmod +x ./flue/data/hg_data_tsv_to_csv.py ./flue/accuracy_from_hf.py
 
         echo "Récupération des données XNLI..."
         ./flue/get-data-xnli.sh $DATA_DIR/xnli
