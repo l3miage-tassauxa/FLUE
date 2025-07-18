@@ -50,10 +50,10 @@ scipy==1.15.3
 six==1.17.0
 sympy @ file:///croot/sympy_1738108488918/work
 threadpoolctl==3.6.0
-tokenizers==0.21.1
+tokenizers==0.19.1
 torch @ file:///opt/conda/conda-bld/libtorch_1745854776362/work
 tqdm==4.67.1
--e git+https://github.com/huggingface/transformers.git@4b8ec667e9919350982e47838bae9f78c7f988a8#egg=transformers
+-e git+https://github.com/formiel/transformers.git@e9419c9c2e0c12da32af112d4d3dae68320d181a#egg=transformers
 triton @ file:///croot/triton_1741878695212/work/python
 typing_extensions @ file:///croot/typing_extensions_1734714854207/work
 tzdata==2025.2
