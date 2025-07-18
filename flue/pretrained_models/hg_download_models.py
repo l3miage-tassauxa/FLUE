@@ -18,5 +18,3 @@ model, log = AutoModel.from_pretrained(model_name, output_loading_info=True, cac
 tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir)
 # flaubert_tokenizer = FlaubertTokenizer.from_pretrained(model_name, do_lowercase=False, cache_dir=cache_dir)
 # do_lowercase=False if using cased models, True if using uncased ones
-
-print(f"Model and tokenizer downloaded to {cache_dir}")
