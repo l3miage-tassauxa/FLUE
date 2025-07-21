@@ -9,7 +9,7 @@ MODEL_PATH=$MODEL_DIR
 # Vérification du premier argument (tâche)
 if [ -z "$1" ]; then
         echo "Usage: ./evaluation_auto.sh <tâche> <installer_libs> <nom_ou_dossier_modèle> <fichier_config>"
-        echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-HF, xnli-HF, xnli-XLM, pawsx, parse, wsd"
+        echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx, parse, wsd"
         echo "Installer libs: true/false"
         echo "Nom du modèle: flaubert_base_cased, flaubert_base_uncased, camembert_base, etc. OU Dossier du modèle: chemin du répertoire contenant 'config.json, tokenizer_config.json et vocab.json'"
         echo "Fichier config: chemin vers un fichier de configuration personnalisé (optionnel)"
@@ -378,6 +378,138 @@ case $TASK in
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
             python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books/test.label
+        ;;
+    cls-music-HF)
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
+        fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./libraries/hg-requirements.txt
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/cls_music_lr5e6_hf_base_uncased.cfg"  # configuration par défaut
+        fi
+        echo "Utilisation de la configuration: $config"
+        
+        echo "Ajout des droits d'exécution aux scripts..."
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
+        chmod +x ./flue/accuracy_from_hf.py
+        echo "Récupération des données CLS..."
+        if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
+            echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            exit 1
+        else
+            echo "Décompression des données..."
+            tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
+            echo "Données décompressées."
+        fi
+        echo "Préparation des données CLS music..."
+        python flue/extract_split_cls.py --indir $DATA_DIR/cls/raw/cls-acl10-unprocessed \
+                                 --outdir $DATA_DIR/cls/processed \
+                                 --do_lower false \
+                                 --use_hugging_face true
+        echo "Conversion des fichiers TSV au format CSV..."
+        python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/music/
+        echo "Lancement de l'évaluation CLS music..."
+        export MODEL_NAME
+        source $config
+        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
+                                        --train_file $train_file \
+                                        --validation_file $validation_file \
+                                        --test_file $test_file \
+                                        --model_name_or_path $model_name_or_path \
+                                        --output_dir $output_dir \
+                                        --max_seq_length 512 \
+                                        --do_train \
+                                        --do_eval \
+                                        --do_predict \
+                                        --learning_rate $lr \
+                                        --num_train_epochs $epochs \
+                                        --save_steps $save_steps \
+                                        --per_device_train_batch_size $batch_size \
+                                        --per_device_eval_batch_size $batch_size \
+                                        --overwrite_output_dir \
+                                        |& tee output.log
+        echo "Calcul de la précision à partir des prédictions Hugging Face..."
+        echo "Précision de validation à partir de l'entraînement:"
+            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
+        echo "Précision de test à partir des prédictions:"
+            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/music/test.label
+        ;;
+    cls-dvd-HF)
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
+        fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./libraries/hg-requirements.txt
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/cls_dvd_lr5e6_hf_base_uncased.cfg"  # configuration par défaut
+        fi
+        echo "Utilisation de la configuration: $config"
+        
+        echo "Ajout des droits d'exécution aux scripts..."
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
+        chmod +x ./flue/accuracy_from_hf.py
+        echo "Récupération des données CLS..."
+        if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
+            echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            exit 1
+        else
+            echo "Décompression des données..."
+            tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
+            echo "Données décompressées."
+        fi
+        echo "Préparation des données CLS dvd..."
+        python flue/extract_split_cls.py --indir $DATA_DIR/cls/raw/cls-acl10-unprocessed \
+                                 --outdir $DATA_DIR/cls/processed \
+                                 --do_lower false \
+                                 --use_hugging_face true
+        echo "Conversion des fichiers TSV au format CSV..."
+        python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/dvd/
+        echo "Lancement de l'évaluation CLS dvd..."
+        export MODEL_NAME
+        source $config
+        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
+                                        --train_file $train_file \
+                                        --validation_file $validation_file \
+                                        --test_file $test_file \
+                                        --model_name_or_path $model_name_or_path \
+                                        --output_dir $output_dir \
+                                        --max_seq_length 512 \
+                                        --do_train \
+                                        --do_eval \
+                                        --do_predict \
+                                        --learning_rate $lr \
+                                        --num_train_epochs $epochs \
+                                        --save_steps $save_steps \
+                                        --per_device_train_batch_size $batch_size \
+                                        --per_device_eval_batch_size $batch_size \
+                                        --overwrite_output_dir \
+                                        |& tee output.log
+        echo "Calcul de la précision à partir des prédictions Hugging Face..."
+        echo "Précision de validation à partir de l'entraînement:"
+            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
+        echo "Précision de test à partir des prédictions:"
+            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/dvd/test.label
         ;;
     pawsx)
         if [ -z "$INSTALL_LIBS" ]; then
