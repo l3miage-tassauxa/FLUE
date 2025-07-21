@@ -9,7 +9,21 @@ MODEL_PATH=$MODEL_DIR
 # Vérification du premier argument (tâche)
 if [ -z "$1" ]; then
         echo "Usage: ./evaluation_auto.sh <tâche> <installer_libs> <nom_ou_dossier_modèle> <fichier_config>"
-        echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx, parse, wsd"
+        echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-        echo "Ajout des en-têtes CSV manquants..."
+        # Fix missing headers in valid.csv and ensure lowercase column names
+        if [ -f "$DATA_DIR/cls/processed/music-csv/valid.csv" ]; then
+            if ! head -1 "$DATA_DIR/cls/processed/music-csv/valid.csv" | grep -q "text,label"; then
+                echo 'text,label' > temp_header.csv && cat "$DATA_DIR/cls/processed/music-csv/valid.csv" >> temp_header.csv && mv temp_header.csv "$DATA_DIR/cls/processed/music-csv/valid.csv"
+                echo "Header ajouté à music valid.csv"
+            fi
+        fi
+        # Fix train.csv and test.csv headers to lowercase
+        if [ -f "$DATA_DIR/cls/processed/music-csv/train.csv" ]; then
+            sed -i '1s/Text,Label/text,label/' "$DATA_DIR/cls/processed/music-csv/train.csv"
+        fi
+        if [ -f "$DATA_DIR/cls/processed/music-csv/test.csv" ]; then
+            sed -i '1s/Text,Label/text,label/' "$DATA_DIR/cls/processed/music-csv/test.csv"
+        fisx, parse, wsd"
         echo "Installer libs: true/false"
         echo "Nom du modèle: flaubert_base_cased, flaubert_base_uncased, camembert_base, etc. OU Dossier du modèle: chemin du répertoire contenant 'config.json, tokenizer_config.json et vocab.json'"
         echo "Fichier config: chemin vers un fichier de configuration personnalisé (optionnel)"
@@ -305,7 +319,7 @@ case $TASK in
         echo "Précision de validation à partir de l'entraînement:"
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books/test.label
+            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books-csv/test.label
         echo ""
         echo "=== MLflow Tracking Information ==="
         echo "Les résultats de l'expérience ont été enregistrés dans MLflow."
@@ -353,6 +367,17 @@ case $TASK in
                                  --use_hugging_face true
         echo "Conversion des fichiers TSV au format CSV..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/books/
+        echo "Ajout des en-têtes CSV manquants..."
+        # Fix headers to lowercase for HuggingFace compatibility
+        if [ -f "$DATA_DIR/cls/processed/books-csv/train.csv" ]; then
+            sed -i '1s/Text,Label/text,label/' "$DATA_DIR/cls/processed/books-csv/train.csv"
+        fi
+        if [ -f "$DATA_DIR/cls/processed/books-csv/valid.csv" ]; then
+            sed -i '1s/Text,Label/text,label/' "$DATA_DIR/cls/processed/books-csv/valid.csv"
+        fi
+        if [ -f "$DATA_DIR/cls/processed/books-csv/test.csv" ]; then
+            sed -i '1s/Text,Label/text,label/' "$DATA_DIR/cls/processed/books-csv/test.csv"
+        fi
         echo "Lancement de l'évaluation CLS books..."
         export MODEL_NAME
         source $config
@@ -377,7 +402,7 @@ case $TASK in
         echo "Précision de validation à partir de l'entraînement:"
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books/test.label
+            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books-csv/test_labels_only.label
         ;;
     cls-music-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -419,6 +444,14 @@ case $TASK in
                                  --use_hugging_face true
         echo "Conversion des fichiers TSV au format CSV..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/music/
+        echo "Ajout des en-têtes CSV manquants..."
+        # Fix missing headers in valid.csv
+        if [ -f "$DATA_DIR/cls/processed/music-csv/valid.csv" ]; then
+            if ! head -1 "$DATA_DIR/cls/processed/music-csv/valid.csv" | grep -q "Text,Label"; then
+                echo 'Text,Label' > temp_header.csv && cat "$DATA_DIR/cls/processed/music-csv/valid.csv" >> temp_header.csv && mv temp_header.csv "$DATA_DIR/cls/processed/music-csv/valid.csv"
+                echo "Header ajouté à music valid.csv"
+            fi
+        fi
         echo "Lancement de l'évaluation CLS music..."
         export MODEL_NAME
         source $config
@@ -443,7 +476,7 @@ case $TASK in
         echo "Précision de validation à partir de l'entraînement:"
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/music/test.label
+            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/music-csv/test_labels_only.label
         ;;
     cls-dvd-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -485,6 +518,21 @@ case $TASK in
                                  --use_hugging_face true
         echo "Conversion des fichiers TSV au format CSV..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/dvd/
+        echo "Ajout des en-têtes CSV manquants..."
+        # Fix missing headers in valid.csv and ensure lowercase column names
+        if [ -f "$DATA_DIR/cls/processed/dvd-csv/valid.csv" ]; then
+            if ! head -1 "$DATA_DIR/cls/processed/dvd-csv/valid.csv" | grep -q "text,label"; then
+                echo 'text,label' > temp_header.csv && cat "$DATA_DIR/cls/processed/dvd-csv/valid.csv" >> temp_header.csv && mv temp_header.csv "$DATA_DIR/cls/processed/dvd-csv/valid.csv"
+                echo "Header ajouté à valid.csv"
+            fi
+        fi
+        # Fix train.csv and test.csv headers to lowercase
+        if [ -f "$DATA_DIR/cls/processed/dvd-csv/train.csv" ]; then
+            sed -i '1s/Text,Label/text,label/' "$DATA_DIR/cls/processed/dvd-csv/train.csv"
+        fi
+        if [ -f "$DATA_DIR/cls/processed/dvd-csv/test.csv" ]; then
+            sed -i '1s/Text,Label/text,label/' "$DATA_DIR/cls/processed/dvd-csv/test.csv"
+        fi
         echo "Lancement de l'évaluation CLS dvd..."
         export MODEL_NAME
         source $config
@@ -509,7 +557,7 @@ case $TASK in
         echo "Précision de validation à partir de l'entraînement:"
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/dvd/test.label
+            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/dvd-csv/test_labels_only.label
         ;;
     pawsx)
         if [ -z "$INSTALL_LIBS" ]; then
