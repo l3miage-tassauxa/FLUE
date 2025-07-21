@@ -231,7 +231,7 @@ case $TASK in
         echo "Veuillez utiliser une de ces tâches spécifiques."
         exit 1
         ;;
-    cls-books-HF)
+    cls-books-Mlflow)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
             exit 1
@@ -286,9 +286,9 @@ case $TASK in
         echo "Dossier de sortie: $output_dir"
         
         python flue/train_with_mlflow.py \
-                                        --train_file $data_dir/train.csv \
-                                        --validation_file $data_dir/valid.csv \
-                                        --test_file $data_dir/test.csv \
+                                        --train_file $train_file \
+                                        --validation_file $validation_file \
+                                        --test_file $test_file \
                                         --model_name_or_path $model_name_or_path \
                                         --output_dir $output_dir \
                                         --max_seq_length 512 \
@@ -311,6 +311,72 @@ case $TASK in
         echo "Pour visualiser les résultats, lancez: mlflow ui --backend-store-uri ./mlflow_logs"
         echo "Puis ouvrez http://localhost:5000 dans votre navigateur."
         echo "Nom de l'expérience: $EXPERIMENT_NAME"
+        ;;
+    cls-books-HF)
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
+        fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises..."
+            pip install -r ./libraries/hg-requirements.txt
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+        else
+            config="flue/examples/cls_books_lr5e6_hf_base_uncased.cfg"  # configuration par défaut
+        fi
+        echo "Utilisation de la configuration: $config"
+        
+        echo "Ajout des droits d'exécution aux scripts..."
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
+        chmod +x ./flue/accuracy_from_hf.py
+        echo "Récupération des données CLS..."
+        if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
+            echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            exit 1
+        else
+            echo "Décompression des données..."
+            tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
+            echo "Données décompressées."
+        fi
+        echo "Préparation des données CLS books..."
+        python flue/extract_split_cls.py --indir $DATA_DIR/cls/raw/cls-acl10-unprocessed \
+                                 --outdir $DATA_DIR/cls/processed \
+                                 --do_lower false \
+                                 --use_hugging_face true
+        echo "Conversion des fichiers TSV au format CSV..."
+        python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/books/
+        echo "Lancement de l'évaluation CLS books..."
+        export MODEL_NAME
+        source $config
+        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
+                                        --train_file $train_file \
+                                        --validation_file $validation_file \
+                                        --test_file $test_file \
+                                        --model_name_or_path $model_name_or_path \
+                                        --output_dir $output_dir \
+                                        --max_seq_length 512 \
+                                        --do_train \
+                                        --do_eval \
+                                        --do_predict \
+                                        --learning_rate $lr \
+                                        --num_train_epochs $epochs \
+                                        --save_steps $save_steps \
+                                        --per_device_train_batch_size $batch_size \
+                                        --per_device_eval_batch_size $batch_size \
+                                        --overwrite_output_dir \
+                                        |& tee output.log
+        echo "Calcul de la précision à partir des prédictions Hugging Face..."
+        echo "Précision de validation à partir de l'entraînement:"
+            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
+        echo "Précision de test à partir des prédictions:"
+            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books/test.label
         ;;
     pawsx)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -430,9 +496,9 @@ case $TASK in
         export MODEL_NAME
         source $config
         python tools/transformers/examples/pytorch/text-classification/run_glue.py \
-                                        --train_file $data_dir/train.csv \
-                                        --validation_file $data_dir/valid.csv \
-                                        --test_file $data_dir/test.csv \
+                                        --train_file $train_file \
+                                        --validation_file $validation_file \
+                                        --test_file $test_file \
                                         --model_name_or_path $model_name_or_path \
                                         --output_dir $output_dir \
                                         --max_seq_length $max_seq_length \
@@ -458,6 +524,7 @@ case $TASK in
         echo "Précision de test à partir des prédictions:"
             python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/xnli/processed/test.label
         ;;
+    
     parse)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
@@ -553,6 +620,6 @@ case $TASK in
         ;;
     *)
         echo "Veuiller spécifier une tache valide."
-        echo "Tâches valides: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-HF, xnli-HF, xnli-XLM, pawsx, parse, wsd"
+        echo "Tâches valides: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-Mlflow, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx, parse, wsd"
         exit 1
 esac
