@@ -8,10 +8,10 @@ MODEL_PATH=$MODEL_DIR
 
 # Vérification du premier argument (tâche)
 if [ -z "$1" ]; then
-        echo "Usage: ./evaluation_auto.sh <tâche> <installer_libs> [nom_modèle] [fichier_config]"
+        echo "Usage: ./evaluation_auto.sh <tâche> <installer_libs> <nom_ou_dossier_modèle> <fichier_config>"
         echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-HF, xnli-HF, xnli-XLM, pawsx, parse, wsd"
         echo "Installer libs: true/false"
-        echo "Nom du modèle: flaubert_base_cased, flaubert_base_uncased, camembert_base, etc."
+        echo "Nom du modèle: flaubert_base_cased, flaubert_base_uncased, camembert_base, etc. OU Dossier du modèle: chemin du répertoire contenant 'config.json, tokenizer_config.json et vocab.json'"
         echo "Fichier config: chemin vers un fichier de configuration personnalisé (optionnel)"
         exit 1
 fi
@@ -19,7 +19,8 @@ fi
 # Paramètres
 TASK=$1
 INSTALL_LIBS=$2
-MODEL_NAME=${3:-"flaubert_base_cased"}  # Modèle par défaut
+# MODEL_NAME=${3:-"flaubert_base_cased"}  # Modèle par défaut
+MODEL_NAME=$3
 CUSTOM_CONFIG=$4  # Fichier de configuration personnalisé (optionnel)
 
 echo "=== Évaluation FLUE ==="
@@ -385,7 +386,7 @@ case $TASK in
         fi
         if [ $INSTALL_LIBS == true ]; then
             echo "Installation des librairies requises..."
-            pip install -r ./requirements.txt
+            pip install -r ./libraries/hg-requirements.txt
             echo "Librairies installées."
         else
             echo "Installation des librairies ignorée."
@@ -394,7 +395,8 @@ case $TASK in
         if [ ! -z "$CUSTOM_CONFIG" ]; then
             config="flue/examples/$CUSTOM_CONFIG"
         else
-            config="flue/examples/pawsx_lr5e6_xlm_base_cased.cfg"
+            echo "Veuillez spécifier un fichier de configuration (flue/examples/<mon_fichier.cfg>) personnalisé pour PAWSX."
+            exit 1
         fi
         echo "Utilisation de la configuration: $config"
         
@@ -402,6 +404,29 @@ case $TASK in
         ./flue/get-data-xnli.sh $DATA_DIR
         echo "Préparation des données PAWSX..."
         ./flue/prepare-data-pawsx.sh $DATA_DIR $MODEL_PATH false
+
+        echo "Conversion des fichiers TSV au format CSV..."
+        python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/pawsx/processed/
+        echo "Lancement de l'évaluation PAWSX..."
+        export MODEL_NAME
+        source $config
+        python3 tools/transformers/examples/pytorch/text-classification/run_glue.py \
+            --model_name_or_path $model_name_or_path \
+            --output_dir $output_dir \
+            --max_seq_length $max_seq_length \
+            --do_train \
+            --do_eval \
+            --learning_rate $lr \
+            --num_train_epochs $epochs \
+            --save_steps $save_steps \
+            --fp16 \
+            --train_file $train_file \
+            --validation_file $validation_file \
+            --test_file $test_file \
+            --do_predict \
+            --per_device_train_batch_size $batch_size \
+            --per_device_eval_batch_size $batch_size \
+            |& tee "output.log"
         ;;
     xnli-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
