@@ -18,6 +18,7 @@ def convert_folder_to_csv(src_folder):
                 # Keep only columns with a real name (not Unnamed or empty)
                 keep_cols = [col for col in df.columns if col and not col.startswith("Unnamed")]
                 df = df[keep_cols]
+                df.columns = [col.lower() for col in df.columns]
                 # Remove quotes from all string values (optional)
                 df = df.map(lambda x: x.strip('"') if isinstance(x, str) else x)
                 new_name = fname[:-4] + '.csv'
@@ -33,7 +34,7 @@ def convert_folder_to_csv(src_folder):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        print("Usage: python flue/data/pawsx/hg_pawsx_data_tsv_to_csv.py flue/data/pawsx/processed")
+        print("Usage: python flue/data/hg_data_tsv_to_csv.py flue/data/pawsx/processed")
         sys.exit(1)
 
     source_folder = sys.argv[1]
