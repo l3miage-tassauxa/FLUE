@@ -28,7 +28,8 @@ class SentenceEmbedder(object):
         Create a sentence embedder from a pretrained model.
         """
         # reload model
-        reloaded = torch.load(path)
+        # reloaded = torch.load(path)
+        reloaded = torch.load(path, weights_only=False)
         state_dict = reloaded['model']
 
         # handle models from multi-GPU checkpoints
