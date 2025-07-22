@@ -22,3 +22,6 @@ output.log
 mlruns
 mlartifacts
 tools
+tools/fastBPE
+tools/mosesdecoder
+tools/wikiextractor
