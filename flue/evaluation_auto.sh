@@ -113,7 +113,8 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche books..."
-        python flue/accuracy_from_task1.py --logits_file ./flue/experiments/cls_books_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/books/test.label        ;;
+        python flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_books_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/books/test.label --format xlm --task cls
+        ;;
     cls-music-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
@@ -174,7 +175,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche music..."
-        python flue/accuracy_from_task1.py --logits_file ./flue/experiments/cls_music_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/music/test.label
+        python flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_music_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/music/test.label --format xlm --task cls
         ;;
     cls-dvd-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -236,7 +237,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche DVD..."
-        python flue/accuracy_from_task1.py --logits_file ./flue/experiments/cls_dvd_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/dvd/test.label
+        python flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_dvd_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/dvd/test.label --format xlm --task cls
         ;;
     cls-XLM)
         echo "La tâche cls-XLM a été séparée en trois tâches distinctes:"
@@ -269,8 +270,8 @@ case $TASK in
         echo "Utilisation de la configuration: $config"
         
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_from_hf.py ./flue/train_with_mlflow.py
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/data/hg_data_tsv_to_csv.py
+        chmod +x ./flue/accuracy_calculator.py ./flue/train_with_mlflow.py
         echo "Récupération des données CLS..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
@@ -319,7 +320,7 @@ case $TASK in
         echo "Précision de validation à partir de l'entraînement:"
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books-csv/test.label
+            python flue/accuracy_calculator.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books-csv/test.label --format hf --task cls
         echo ""
         echo "=== MLflow Tracking Information ==="
         echo "Les résultats de l'expérience ont été enregistrés dans MLflow."
@@ -348,8 +349,8 @@ case $TASK in
         echo "Utilisation de la configuration: $config"
         
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_from_hf.py
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/data/hg_data_tsv_to_csv.py
+        chmod +x ./flue/accuracy_calculator.py
         echo "Récupération des données CLS..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
@@ -402,7 +403,7 @@ case $TASK in
         echo "Précision de validation à partir de l'entraînement:"
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books-csv/test_labels_only.label
+            python flue/accuracy_calculator.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books-csv/test_labels_only.label --format hf --task cls
         ;;
     cls-music-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -425,8 +426,8 @@ case $TASK in
         echo "Utilisation de la configuration: $config"
         
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_from_hf.py
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/data/hg_data_tsv_to_csv.py
+        chmod +x ./flue/accuracy_calculator.py
         echo "Récupération des données CLS..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
@@ -476,7 +477,7 @@ case $TASK in
         echo "Précision de validation à partir de l'entraînement:"
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/music-csv/test_labels_only.label
+            python flue/accuracy_calculator.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/music-csv/test_labels_only.label --format hf --task cls
         ;;
     cls-dvd-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -499,8 +500,8 @@ case $TASK in
         echo "Utilisation de la configuration: $config"
         
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/binarize.py ./flue/data/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_from_hf.py
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/data/hg_data_tsv_to_csv.py
+        chmod +x ./flue/accuracy_calculator.py
         echo "Récupération des données CLS..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
@@ -557,7 +558,7 @@ case $TASK in
         echo "Précision de validation à partir de l'entraînement:"
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/dvd-csv/test_labels_only.label
+            python flue/accuracy_calculator.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/dvd-csv/test_labels_only.label --format hf --task cls
         ;;
     pawsx)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -660,7 +661,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche 3..."
-        python ./flue/accuracy_from_task3.py
+        python flue/accuracy_calculator.py --predictions_file ./experiments/xnli_xlm_base_cased/dropout_0.1_lre_0.000005_lrp_0.000005/test.pred.9 --labels_file ./flue/data/xnli/processed/test.label --format xlm --task xnli
         echo "Fin de l'évaluation XNLI."
         ;;
     xnli-HF)
@@ -684,8 +685,8 @@ case $TASK in
         echo "Utilisation de la configuration: $config"
         
         echo "Ajout des droits d'exécution aux scripts..."
-        chmod +x ./flue/get-data-xnli.sh ./flue/extract_xnli.py ./flue/binarize.py 
-        chmod +x ./flue/data/hg_data_tsv_to_csv.py ./flue/accuracy_from_hf.py
+        chmod +x ./flue/get-data-xnli.sh ./flue/extract_xnli.py 
+        chmod +x ./flue/data/hg_data_tsv_to_csv.py ./flue/accuracy_calculator.py
 
         echo "Récupération des données XNLI..."
         ./flue/get-data-xnli.sh $DATA_DIR/xnli
@@ -727,7 +728,7 @@ case $TASK in
         echo "Précision de validation à partir de l'entraînement:"
             python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
         echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_from_hf.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/xnli/processed/test.label
+            python flue/accuracy_calculator.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/xnli/processed/test.label --format hf --task xnli
         ;;
     
     parse)
