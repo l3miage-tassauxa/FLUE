@@ -19,9 +19,9 @@ flue/pretrained_models/*.tar.gz*
 flue/pretrained_models/*.zip*
 flue/pretrained_models/*/
 output.log
-mlruns
 mlartifacts
 tools
 tools/fastBPE
 tools/mosesdecoder
 tools/wikiextractor
+mlruns
