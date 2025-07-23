@@ -244,7 +244,7 @@ case $TASK in
     cls-books-HF)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
-            exit 1<œ
+            exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
             echo "Installation des librairies requises..."
@@ -304,7 +304,6 @@ case $TASK in
             --do_predict \
             --per_device_train_batch_size $batch_size \
             --per_device_eval_batch_size $batch_size \
-            |& tee "output.log"
 
         echo "Calcul de la précision à partir des prédictions Hugging Face..."
         echo "Précision de validation à partir de l'entraînement:"
@@ -375,7 +374,6 @@ case $TASK in
             --do_predict \
             --per_device_train_batch_size $batch_size \
             --per_device_eval_batch_size $batch_size \
-            |& tee "output.log"
 
         echo "Calcul de la précision à partir des prédictions Hugging Face..."
         echo "Précision de validation à partir de l'entraînement:"
@@ -446,7 +444,6 @@ case $TASK in
             --do_predict \
             --per_device_train_batch_size $batch_size \
             --per_device_eval_batch_size $batch_size \
-            |& tee "output.log"
 
         echo "Calcul de la précision à partir des prédictions Hugging Face..."
         echo "Précision de validation à partir de l'entraînement:"
@@ -559,7 +556,6 @@ case $TASK in
             --do_predict \
             --per_device_train_batch_size $batch_size \
             --per_device_eval_batch_size $batch_size \
-            |& tee "output.log"
     ;;
     xnli-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -673,7 +669,6 @@ case $TASK in
             --do_predict \
             --per_device_train_batch_size $batch_size \
             --per_device_eval_batch_size $batch_size \
-            |& tee "output.log"
 
         echo "Calcul de la précision à partir des prédictions Hugging Face..."
         echo "Précision de validation à partir de l'entraînement:"
