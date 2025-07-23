@@ -303,7 +303,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
+            --per_device_eval_batch_size $batch_size 
 
         echo "Calcul de la précision à partir des prédictions Hugging Face..."
         echo "Précision de validation à partir de l'entraînement:"
@@ -373,7 +373,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
+            --per_device_eval_batch_size $batch_size 
 
         echo "Calcul de la précision à partir des prédictions Hugging Face..."
         echo "Précision de validation à partir de l'entraînement:"
@@ -443,7 +443,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
+            --per_device_eval_batch_size $batch_size
 
         echo "Calcul de la précision à partir des prédictions Hugging Face..."
         echo "Précision de validation à partir de l'entraînement:"
@@ -555,7 +555,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
+            --per_device_eval_batch_size $batch_size 
     ;;
     xnli-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -668,7 +668,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
+            --per_device_eval_batch_size $batch_size 
 
         echo "Calcul de la précision à partir des prédictions Hugging Face..."
         echo "Précision de validation à partir de l'entraînement:"
