@@ -25,11 +25,6 @@ def convert_folder_to_csv(src_folder):
                 dst_path = os.path.join(dst_folder, new_name)
                 df.to_csv(dst_path, index=False)
                 print(f"Converted {fname} -> {new_name}")
-            else:
-                # Copy non-TSV files as-is
-                dst_path = os.path.join(dst_folder, fname)
-                shutil.copy2(src_path, dst_path)
-                print(f"Copied {fname}")
 
 if __name__ == "__main__":
     import sys
