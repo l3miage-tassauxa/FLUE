@@ -2,9 +2,11 @@
 """
 Unified accuracy calculator for FLUE evaluation tasks.
 Supports different input formats: XLM logits, Hugging Face predictions, and direct labels.
+Automatically creates corrected label files when needed.
 """
 
 import argparse
+import csv
 import math
 import numpy as np
 import os
@@ -93,6 +95,56 @@ def parse_labels(labels_file, task_type="auto"):
     return labels
 
 
+def create_corrected_labels_from_csv(csv_file_path, output_labels_path):
+    """Create corrected labels file from CSV data."""
+    print(f"Creating corrected labels from CSV file: {csv_file_path}")
+    
+    if not os.path.exists(csv_file_path):
+        print(f"Error: CSV file '{csv_file_path}' not found!")
+        return False
+    
+    labels = []
+    try:
+        with open(csv_file_path, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            next(reader)  # Skip header
+            for row in reader:
+                if len(row) >= 2:
+                    labels.append(row[1])  # Second column is the label
+        
+        # Write corrected labels
+        with open(output_labels_path, 'w') as f:
+            for label in labels:
+                f.write(label + '\n')
+        
+        print(f"Created corrected labels file: {output_labels_path} ({len(labels)} labels)")
+        return True
+    except Exception as e:
+        print(f"Error creating corrected labels: {e}")
+        return False
+
+
+def validate_labels_alignment(labels_file, csv_file_path):
+    """Check if labels file is properly aligned with CSV data."""
+    if not os.path.exists(labels_file) or not os.path.exists(csv_file_path):
+        return False
+    
+    try:
+        # Count lines in labels file
+        with open(labels_file, 'r') as f:
+            label_lines = sum(1 for line in f if line.strip())
+        
+        # Count data rows in CSV file (excluding header)
+        with open(csv_file_path, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            next(reader)  # Skip header
+            csv_lines = sum(1 for row in reader)
+        
+        return label_lines == csv_lines
+    except:
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser(description="Unified accuracy calculator for FLUE tasks.")
     parser.add_argument("--predictions_file", type=str, required=True, 
@@ -103,6 +155,8 @@ def main():
                        help="Input format: xlm (logits), hf (Hugging Face), or auto-detect")
     parser.add_argument("--task", type=str, choices=["xnli", "cls", "auto"], default="auto",
                        help="Task type for label mapping: xnli, cls, or auto-detect")
+    parser.add_argument("--auto_correct", action="store_true", default=True,
+                       help="Automatically create corrected labels from CSV if misaligned")
     
     args = parser.parse_args()
     
@@ -143,8 +197,47 @@ def main():
         print(f"Error: Unknown format '{format_type}'")
         exit(1)
     
+    # Parse labels with auto-correction
+    labels_file = args.labels_file
+    
+    # Auto-correct labels if needed (for HF tasks with CSV data)
+    if args.auto_correct and format_type == "hf":
+        # Try to find corresponding CSV test file
+        base_dir = os.path.dirname(args.labels_file)
+        possible_csv_files = [
+            os.path.join(base_dir, "test.csv"),
+            args.labels_file.replace("test_labels_only.label", "test.csv"),
+            args.labels_file.replace(".label", ".csv")
+        ]
+        
+        csv_file = None
+        for csv_path in possible_csv_files:
+            if os.path.exists(csv_path):
+                csv_file = csv_path
+                break
+        
+        if csv_file:
+            # Check if current labels file is properly aligned
+            if not validate_labels_alignment(args.labels_file, csv_file):
+                print(f"Labels file appears misaligned with CSV data ({args.labels_file})")
+                print(f"Creating corrected version from CSV: {csv_file}")
+                
+                # Create corrected labels file
+                if "test_labels_only.label" in args.labels_file:
+                    corrected_labels_file = args.labels_file.replace("test_labels_only.label", "test_labels_correct.label")
+                else:
+                    corrected_labels_file = args.labels_file.replace(".label", "_correct.label")
+                
+                if create_corrected_labels_from_csv(csv_file, corrected_labels_file):
+                    labels_file = corrected_labels_file
+                    print(f"Using corrected labels file: {labels_file}")
+                else:
+                    print("Failed to create corrected labels, using original file")
+            else:
+                print(f"Labels file is properly aligned with CSV data")
+    
     # Parse labels
-    labels = parse_labels(args.labels_file, args.task)
+    labels = parse_labels(labels_file, args.task)
     
     # Calculate accuracy
     accuracy, margin, total = calculate_accuracy_with_confidence(predictions, labels)
