@@ -99,7 +99,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche books..."
-        python flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_books_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/books/test.label --format xlm --task cls
+        python3 flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_books_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/cls/processed/books/test.label --format xlm --task cls
         ;;
     cls-music-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -165,7 +165,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche music..."
-        python flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_music_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/music/test.label --format xlm --task cls
+        python3 flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_music_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/cls/processed/music/test.label --format xlm --task cls
         ;;
     cls-dvd-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -231,7 +231,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche DVD..."
-        python flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_dvd_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.29 --labels_file ./flue/data/cls/processed/dvd/test.label --format xlm --task cls
+        python3 flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_dvd_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/cls/processed/dvd/test.label --format xlm --task cls
         ;;
     cls-XLM)
         echo "La tâche cls-XLM a été séparée en trois tâches distinctes:"
@@ -305,11 +305,9 @@ case $TASK in
             --per_device_train_batch_size $batch_size \
             --per_device_eval_batch_size $batch_size 
 
-        echo "Calcul de la précision à partir des prédictions Hugging Face..."
-        echo "Précision de validation à partir de l'entraînement:"
-            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
-        echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_calculator.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/books-csv/test_labels_only.label --format hf --task cls
+        echo "Calcul de la précision à partir des résultats Hugging Face..."
+        echo "Résultats d'évaluation avec intervalle de confiance:"
+            python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
         ;;
     cls-music-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -375,11 +373,9 @@ case $TASK in
             --per_device_train_batch_size $batch_size \
             --per_device_eval_batch_size $batch_size 
 
-        echo "Calcul de la précision à partir des prédictions Hugging Face..."
-        echo "Précision de validation à partir de l'entraînement:"
-            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
-        echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_calculator.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/music-csv/test_labels_only.label --format hf --task cls
+        echo "Calcul de la précision à partir des résultats Hugging Face..."
+        echo "Résultats d'évaluation avec intervalle de confiance:"
+            python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
         ;;
     cls-dvd-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -445,11 +441,9 @@ case $TASK in
             --per_device_train_batch_size $batch_size \
             --per_device_eval_batch_size $batch_size
 
-        echo "Calcul de la précision à partir des prédictions Hugging Face..."
-        echo "Précision de validation à partir de l'entraînement:"
-            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
-        echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_calculator.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/cls/processed/dvd-csv/test_labels_only.label --format hf --task cls
+        echo "Calcul de la précision à partir des résultats Hugging Face..."
+        echo "Résultats d'évaluation avec intervalle de confiance:"
+            python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
         ;;
     pawsx-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -611,7 +605,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche 3..."
-        python flue/accuracy_calculator.py --predictions_file ./experiments/xnli_xlm_base_cased/dropout_0.1_lre_0.000005_lrp_0.000005/test.pred.9 --labels_file ./flue/data/xnli/processed/test.label --format xlm --task xnli
+        python3 flue/accuracy_calculator.py --predictions_file ./experiments/xnli_xlm_base_cased/dropout_0.1_lre_0.000005_lrp_0.000005/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/xnli/processed/test.label --format xlm --task xnli
         echo "Fin de l'évaluation XNLI."
         ;;
     xnli-HF)
@@ -670,11 +664,9 @@ case $TASK in
             --per_device_train_batch_size $batch_size \
             --per_device_eval_batch_size $batch_size 
 
-        echo "Calcul de la précision à partir des prédictions Hugging Face..."
-        echo "Précision de validation à partir de l'entraînement:"
-            python -c "import json; data=json.load(open('$output_dir/eval_results.json')); print(f\"Précision de validation: {data['eval_accuracy']*100:.2f}% sur {data['eval_samples']} exemples\")"
-        echo "Précision de test à partir des prédictions:"
-            python flue/accuracy_calculator.py --predictions_file $output_dir/predict_results_None.txt --labels_file $DATA_DIR/xnli/processed/test.label --format hf --task xnli
+        echo "Calcul de la précision à partir des résultats Hugging Face..."
+        echo "Résultats d'évaluation avec intervalle de confiance:"
+            python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
         ;;
     
     parse)

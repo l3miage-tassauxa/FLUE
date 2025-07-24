@@ -7,6 +7,7 @@ Automatically creates corrected label files when needed.
 
 import argparse
 import csv
+import json
 import math
 import numpy as np
 import os
@@ -38,6 +39,63 @@ def parse_xlm_logits(logits_file):
             pred = int(np.argmax(logits))
             predictions.append(pred)
     return predictions
+
+
+def parse_hf_eval_results(eval_results_file):
+    """Parse Hugging Face eval_results.json file format."""
+    try:
+        with open(eval_results_file, 'r') as f:
+            results = json.load(f)
+        
+        # Extract accuracy and number of samples
+        accuracy = results.get('eval_accuracy', 0.0)
+        num_samples = results.get('eval_samples', 0)
+        
+        if num_samples == 0:
+            print("Warning: No evaluation samples found in results file")
+            return None, None
+        
+        print(f"Found Hugging Face evaluation results:")
+        print(f"  - Accuracy: {accuracy * 100:.2f}%")
+        print(f"  - Samples: {num_samples}")
+        
+        return accuracy, num_samples
+    except Exception as e:
+        print(f"Error reading eval_results.json: {e}")
+        return None, None
+
+
+def calculate_confidence_interval(accuracy, num_samples):
+    """Calculate 95% confidence interval for accuracy."""
+    if num_samples <= 0:
+        return 0.0
+    
+    margin = 1.96 * math.sqrt(accuracy * (1 - accuracy) / num_samples)
+    return margin
+
+
+def find_hf_eval_results(base_path=None):
+    """Find Hugging Face eval_results.json file in experiment directories."""
+    if base_path is None:
+        base_path = "./flue/experiments"
+    
+    # Common patterns for HF experiment directories
+    search_patterns = [
+        "**/eval_results.json",
+        "flaubert/**/eval_results.json", 
+        "cls_hf_*/**/eval_results.json",
+        "**/lr_*/**/eval_results.json"
+    ]
+    
+    import glob
+    for pattern in search_patterns:
+        full_pattern = os.path.join(base_path, pattern)
+        matches = glob.glob(full_pattern, recursive=True)
+        if matches:
+            # Return the most recent one
+            return max(matches, key=os.path.getmtime)
+    
+    return None
 
 
 def parse_hf_predictions(predictions_file):
@@ -146,19 +204,73 @@ def validate_labels_alignment(labels_file, csv_file_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Unified accuracy calculator for FLUE tasks.")
-    parser.add_argument("--predictions_file", type=str, required=True, 
+    parser = argparse.ArgumentParser(
+        description="Unified accuracy calculator for FLUE tasks.",
+        epilog="""
+Examples:
+  # Calculate from XLM predictions
+  python3 accuracy_calculator.py --predictions_file model.pred.29 --labels_file test.label --format xlm
+
+  # Calculate from HF predictions
+  python3 accuracy_calculator.py --predictions_file predict_results.txt --labels_file test.label --format hf
+
+  # Calculate directly from HF eval_results.json (recommended for HF tasks)
+  python3 accuracy_calculator.py --eval_results eval_results.json
+
+  # Auto-detect HF eval_results.json in experiments directory
+  python3 accuracy_calculator.py
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--predictions_file", type=str, required=False, 
                        help="Path to predictions file (XLM logits or HF predictions)")
-    parser.add_argument("--labels_file", type=str, required=True, 
+    parser.add_argument("--labels_file", type=str, required=False, 
                        help="Path to gold labels file")
+    parser.add_argument("--eval_results", type=str, required=False,
+                       help="Path to Hugging Face eval_results.json file")
     parser.add_argument("--format", type=str, choices=["xlm", "hf", "auto"], default="auto",
-                       help="Input format: xlm (logits), hf (Hugging Face), or auto-detect")
+                       help="Input format: xlm (logits), hf (predictions), or auto-detect")
     parser.add_argument("--task", type=str, choices=["xnli", "cls", "auto"], default="auto",
                        help="Task type for label mapping: xnli, cls, or auto-detect")
     parser.add_argument("--auto_correct", action="store_true", default=True,
                        help="Automatically create corrected labels from CSV if misaligned")
     
     args = parser.parse_args()
+    
+    # Check for HF eval_results.json format first
+    if args.eval_results:
+        eval_file = args.eval_results or args.predictions_file
+        if not os.path.exists(eval_file):
+            print(f"Error: Eval results file '{eval_file}' not found!")
+            exit(1)
+        
+        accuracy, num_samples = parse_hf_eval_results(eval_file)
+        if accuracy is not None and num_samples is not None:
+            margin = calculate_confidence_interval(accuracy, num_samples)
+            print(f"Accuracy: {accuracy * 100:.2f}% ± {margin * 100:.2f}% on {num_samples} examples (IC 95%).")
+            return
+        else:
+            print("Failed to parse eval_results.json file")
+            exit(1)
+    
+    # Auto-detect eval_results.json if no specific file provided
+    if not args.predictions_file and not args.eval_results:
+        eval_file = find_hf_eval_results()
+        if eval_file:
+            print(f"Auto-detected HF eval results file: {eval_file}")
+            accuracy, num_samples = parse_hf_eval_results(eval_file)
+            if accuracy is not None and num_samples is not None:
+                margin = calculate_confidence_interval(accuracy, num_samples)
+                print(f"Accuracy: {accuracy * 100:.2f}% ± {margin * 100:.2f}% on {num_samples} examples (IC 95%).")
+                return
+    
+    # Fall back to traditional prediction file processing
+    if not args.predictions_file:
+        print("Error: Either --predictions_file or --eval_results must be provided!")
+        exit(1)
+    if not args.labels_file:
+        print("Error: --labels_file is required for prediction file processing!")
+        exit(1)
     
     # Check if files exist
     if not os.path.exists(args.predictions_file):
@@ -186,7 +298,7 @@ def main():
                     else:
                         format_type = "hf"
             except:
-                format_type = "hf"  # Default fallback
+                format_type = "¤"  # Default fallback
     
     # Parse predictions based on format
     if format_type == "xlm":
@@ -200,42 +312,6 @@ def main():
     # Parse labels with auto-correction
     labels_file = args.labels_file
     
-    # Auto-correct labels if needed (for HF tasks with CSV data)
-    if args.auto_correct and format_type == "hf":
-        # Try to find corresponding CSV test file
-        base_dir = os.path.dirname(args.labels_file)
-        possible_csv_files = [
-            os.path.join(base_dir, "test.csv"),
-            args.labels_file.replace("test_labels_only.label", "test.csv"),
-            args.labels_file.replace(".label", ".csv")
-        ]
-        
-        csv_file = None
-        for csv_path in possible_csv_files:
-            if os.path.exists(csv_path):
-                csv_file = csv_path
-                break
-        
-        if csv_file:
-            # Check if current labels file is properly aligned
-            if not validate_labels_alignment(args.labels_file, csv_file):
-                print(f"Labels file appears misaligned with CSV data ({args.labels_file})")
-                print(f"Creating corrected version from CSV: {csv_file}")
-                
-                # Create corrected labels file
-                if "test_labels_only.label" in args.labels_file:
-                    corrected_labels_file = args.labels_file.replace("test_labels_only.label", "test_labels_correct.label")
-                else:
-                    corrected_labels_file = args.labels_file.replace(".label", "_correct.label")
-                
-                if create_corrected_labels_from_csv(csv_file, corrected_labels_file):
-                    labels_file = corrected_labels_file
-                    print(f"Using corrected labels file: {labels_file}")
-                else:
-                    print("Failed to create corrected labels, using original file")
-            else:
-                print(f"Labels file is properly aligned with CSV data")
-    
     # Parse labels
     labels = parse_labels(labels_file, args.task)
     
@@ -243,7 +319,7 @@ def main():
     accuracy, margin, total = calculate_accuracy_with_confidence(predictions, labels)
     
     # Print result
-    print(f"Accuracy: {accuracy * 100:.2f}% ± {margin * 100:.2f}% on {total} examples (IC 95%).")
+    print(f"Accuracy: {accuracy * 100:.2f}% ± {margin * 100:.2f}% on {total} examples.")
 
 
 if __name__ == "__main__":
