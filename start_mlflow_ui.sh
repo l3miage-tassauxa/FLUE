@@ -10,7 +10,7 @@ export MLFLOW_TRACKING_URI="file://$(pwd)/mlruns"
 # Check if mlruns directory exists
 if [ ! -d "./mlruns" ]; then
     echo "Warning: mlruns directory not found. No experiments have been logged yet."
-    echo "Run a task with cls-books-MlFlow first to generate experiments."
+    echo "Run a Hugging Face task (e.g., cls-books-HF) first to generate experiments."
     exit 1
 fi
 

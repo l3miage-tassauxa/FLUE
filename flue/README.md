@@ -27,14 +27,40 @@ bash ./flue/evaluation_auto.sh <tache> <installer_libs> [nom_modele] [fichier_co
 
 ### Tâches Disponibles
 
-#### Tâches Hugging Face (Recommandées)
-- **`cls-HF`** : Analyse de sentiment cross-lingue avec Hugging Face Transformers
-- **`xnli-HF`** : Inférence en langage naturel cross-lingue avec Hugging Face Transformers
+#### Tâches Hugging Face avec Intégration MLflow
+- **`cls-books-HF`** : Classification de sentiment sur les livres avec Hugging Face Transformers et tracking MLflow
+- **`cls-music-HF`** : Classification de sentiment sur la musique avec Hugging Face Transformers et tracking MLflow  
+- **`cls-dvd-HF`** : Classification de sentiment sur les DVD avec Hugging Face Transformers et tracking MLflow
+- **`pawsx-HF`** : Paraphrase Adversaries from Word Scrambling avec Hugging Face Transformers et tracking MLflow
+- **`xnli-HF`** : Inférence en langage naturel cross-lingue avec Hugging Face Transformers et tracking MLflow
 
 #### Tâches XLM (Héritées)
 - **`cls-XLM`** : Analyse de sentiment cross-lingue avec le framework XLM
 - **`xnli-XLM`** : Inférence en langage naturel cross-lingue avec le framework XLM
-- **`pawsx`** : Paraphrase Adversaries from Word Scrambling for Cross-lingual Understanding
+- **`pawsx`** : Paraphrase Adversaries from Word Scrambling pour la compréhension cross-lingue
+
+## Intégration MLflow
+
+Toutes les tâches Hugging Face incluent un tracking automatique des expériences avec MLflow :
+
+### Démarrage Rapide MLflow
+1. **Lancer une expérience** : `bash tache.sh cls-books-HF`
+2. **Démarrer l'interface MLflow** : `bash start_mlflow_ui.sh`
+3. **Accéder au dashboard** : http://localhost:5000
+
+### Expériences Trackées
+- **FLUE_CLS_Books_HF** : Classification de sentiment sur les livres
+- **FLUE_CLS_Music** : Classification de sentiment sur la musique
+- **FLUE_CLS_DVD** : Classification de sentiment sur les DVD
+- **FLUE_PAWSX** : Tâche PAWSX avec Hugging Face
+- **FLUE_XNLI** : Tâche XNLI avec Hugging Face
+
+### Métriques Automatiques
+- Accuracy de validation et test
+- Loss d'entraînement
+- Temps d'exécution
+- Paramètres d'hyperparamètres
+- Artéfacts de modèle et fichiers de configuration
 
 ## Exemples
 
@@ -45,7 +71,10 @@ bash ./flue/evaluation_auto.sh <tache> <installer_libs> [nom_modele] [fichier_co
 bash ./flue/evaluation_auto.sh xnli-HF true
 
 # Utiliser le modèle par défaut, ignorer l'installation des librairies
-bash ./flue/evaluation_auto.sh cls-HF false
+bash ./flue/evaluation_auto.sh cls-books-HF false
+
+# Lancer une évaluation avec tracking MLflow
+bash tache.sh cls-music-HF
 ```
 
 ### 2. Évaluer avec Votre Propre Modèle
@@ -54,8 +83,11 @@ bash ./flue/evaluation_auto.sh cls-HF false
 # Évaluer votre modèle personnalisé
 bash ./flue/evaluation_auto.sh xnli-HF true mon_modele_francais
 
-# Évaluer CamemBERT
-bash ./flue/evaluation_auto.sh cls-HF false camembert-base
+# Évaluer CamemBERT avec MLflow tracking
+bash tache.sh cls-books-HF camembert-base
+
+# Évaluer avec une tâche spécifique
+bash ./flue/evaluation_auto.sh cls-dvd-HF false camembert-base
 ```
 
 ### 3. Utiliser une Configuration Personnalisée
