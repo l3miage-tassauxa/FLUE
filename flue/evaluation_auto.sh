@@ -9,7 +9,7 @@ MODEL_PATH=$MODEL_DIR
 # Vérification du premier argument (tâche)
 if [ -z "$1" ]; then
         echo "Usage: ./evaluation_auto.sh <tâche> <installer_libs> <fichier_config>"
-        echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx-XLM, pawsx-HF, parse, wsd"
+        echo "Tâches: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-HF, cls-music-HF, cls-dvd-HF, cls-books-MlFlow, xnli-HF, xnli-XLM, pawsx-XLM, pawsx-HF, parse, wsd"
         echo "Installer libs: true/false"
         echo "Fichier config: chemin vers un fichier de configuration personnalisé"
         exit 1
@@ -99,7 +99,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche books..."
-        python3 flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_books_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/cls/processed/books/test.label --format xlm --task cls
+        python flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_books_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/cls/processed/books/test.label --format xlm --task cls
         ;;
     cls-music-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -165,7 +165,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche music..."
-        python3 flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_music_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/cls/processed/music/test.label --format xlm --task cls
+        python flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_music_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/cls/processed/music/test.label --format xlm --task cls
         ;;
     cls-dvd-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -231,7 +231,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche DVD..."
-        python3 flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_dvd_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/cls/processed/dvd/test.label --format xlm --task cls
+        python flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_dvd_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/cls/processed/dvd/test.label --format xlm --task cls
         ;;
     cls-XLM)
         echo "La tâche cls-XLM a été séparée en trois tâches distinctes:"
@@ -307,7 +307,7 @@ case $TASK in
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
         echo "Résultats d'évaluation avec intervalle de confiance:"
-            python3 flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
+        python flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
         ;;
     cls-music-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -375,7 +375,7 @@ case $TASK in
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
         echo "Résultats d'évaluation avec intervalle de confiance:"
-            python3 flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
+        python flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
         ;;
     cls-dvd-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -443,7 +443,95 @@ case $TASK in
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
         echo "Résultats d'évaluation avec intervalle de confiance:"
-            python3 flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
+        python flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
+        ;;
+    cls-books-MlFlow)
+        if [ -z "$INSTALL_LIBS" ]; then
+            echo "Veuillez spécifier si les librairies doivent être installées (true/false)."
+            exit 1
+        fi
+        if [ $INSTALL_LIBS == true ]; then
+            echo "Installation des librairies requises (incluant MLflow)..."
+            pip install -r ./libraries/hg-requirements.txt
+            echo "Librairies installées."
+        else
+            echo "Installation des librairies ignorée."
+        fi
+        
+        if [ ! -z "$CUSTOM_CONFIG" ]; then
+            config="flue/examples/$CUSTOM_CONFIG"
+            if [ ! -f "$config" ]; then
+                echo "Erreur : le fichier de configuration '$config' n'existe pas dans le répertoire flue/examples."
+                exit 1
+            fi
+        fi
+        echo "Utilisation de la configuration: $config"
+        
+        echo "Ajout des droits d'exécution aux scripts..."
+        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py ./flue/data/hg_data_tsv_to_csv.py
+        chmod +x ./flue/accuracy_calculator.py ./flue/log_to_mlflow.py ./start_mlflow_ui.sh
+        echo "Récupération des données CLS..."
+        if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
+            echo "Vous devez faire une demande pour les données à l'adresse https://zenodo.org/record/3251672"
+            echo "et placer le fichier 'cls-acl10-unprocessed.tar' dans $DATA_DIR/cls/raw"
+            exit 1
+        elif [ -d "$DATA_DIR/cls/raw/cls-acl10-unprocessed" ]; then
+            echo "Les données sont déjà décompressées."
+        else
+            echo "Décompression des données..."
+            tar -xvf ./flue/data/cls/raw/cls-acl10-unprocessed.tar.gz -C ./flue/data/cls/raw/
+            echo "Données décompressées."
+        fi
+        echo "Préparation des données CLS books..."
+        python flue/extract_split_cls.py --indir $DATA_DIR/cls/raw/cls-acl10-unprocessed \
+                                 --outdir $DATA_DIR/cls/processed \
+                                 --do_lower false \
+                                 --use_hugging_face true
+        echo "Conversion des fichiers TSV au format CSV..."
+        python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/books/
+        
+        echo "Configuration de MLflow..."
+        export MLFLOW_TRACKING_URI="file://$(pwd)/mlruns"
+        export MLFLOW_EXPERIMENT_NAME="FLUE_CLS_Books"
+        
+        # Create mlruns directory if it doesn't exist
+        mkdir -p ./mlruns
+        
+        echo "Lancement de l'évaluation CLS books avec MLflow..."
+        source $config
+        python ../transformers/examples/pytorch/text-classification/run_glue.py \
+            --model_name_or_path $model_name_or_path \
+            --output_dir $output_dir \
+            --overwrite_output_dir \
+            --max_seq_length $max_seq_length \
+            --do_train \
+            --do_eval \
+            --learning_rate $lr \
+            --num_train_epochs $epochs \
+            --save_steps $save_steps \
+            --fp16 \
+            --train_file $train_file \
+            --validation_file $validation_file \
+            --test_file $test_file \
+            --do_predict \
+            --per_device_train_batch_size $batch_size \
+            --per_device_eval_batch_size $batch_size \
+            --report_to mlflow \
+            --run_name "cls_books_$(date +%Y%m%d_%H%M%S)"
+
+        # Check if training was successful
+        if [ $? -ne 0 ]; then
+            echo "Erreur: L'entraînement a échoué. Arrêt du script."
+            exit 1
+        fi
+
+        echo "Calcul de la précision à partir des résultats Hugging Face..."
+        echo "Résultats d'évaluation avec intervalle de confiance:"
+        accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
+        echo "$accuracy_output"
+        
+        echo "Logging des résultats dans MLflow..."
+        python flue/log_to_mlflow.py "$output_dir/eval_results.json" "cls_books" "$model_name_or_path" "$lr" "$epochs" "$batch_size" "$accuracy_output"
         ;;
     pawsx-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -605,7 +693,7 @@ case $TASK in
                         --max_len $max_len \
                         --max_vocab $max_vocab
         echo "Calcul de la précision à partir des prédictions de la tâche 3..."
-        python3 flue/accuracy_calculator.py --predictions_file ./experiments/xnli_xlm_base_cased/dropout_0.1_lre_0.000005_lrp_0.000005/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/xnli/processed/test.label --format xlm --task xnli
+        python flue/accuracy_calculator.py --predictions_file ./experiments/xnli_xlm_base_cased/dropout_0.1_lre_0.000005_lrp_0.000005/test.pred.$((num_epochs - 1)) --labels_file ./flue/data/xnli/processed/test.label --format xlm --task xnli
         echo "Fin de l'évaluation XNLI."
         ;;
     xnli-HF)
@@ -666,7 +754,7 @@ case $TASK in
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
         echo "Résultats d'évaluation avec intervalle de confiance:"
-            python3 flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
+        python flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
         ;;
     
     parse)
@@ -764,6 +852,6 @@ case $TASK in
         ;;
     *)
         echo "Veuiller spécifier une tache valide."
-        echo "Tâches valides: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-Mlflow, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx-HF, parse, wsd"
+        echo "Tâches valides: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-MlFlow, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx-HF, parse, wsd"
         exit 1
 esac
