@@ -307,7 +307,7 @@ case $TASK in
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
         echo "Résultats d'évaluation avec intervalle de confiance:"
-            python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
+            python3 flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
         ;;
     cls-music-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -375,7 +375,7 @@ case $TASK in
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
         echo "Résultats d'évaluation avec intervalle de confiance:"
-            python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
+            python3 flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
         ;;
     cls-dvd-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -443,7 +443,7 @@ case $TASK in
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
         echo "Résultats d'évaluation avec intervalle de confiance:"
-            python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
+            python3 flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
         ;;
     pawsx-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -666,7 +666,7 @@ case $TASK in
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
         echo "Résultats d'évaluation avec intervalle de confiance:"
-            python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
+            python3 flue/accuracy_calculator.py --eval_results /home/getalp/tassauxa/FLUE/FLUE/flue/experiments/flaubert/cls_hf_flaubert_flaubert_base_cased/lr_5e-6/eval_results.json
         ;;
     
     parse)
