@@ -286,13 +286,13 @@ case $TASK in
         echo "Conversion des fichiers TSV au format CSV..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/books/
         
-        echo "Configuration de MLflow..."
-        export MLFLOW_TRACKING_URI="file://$(pwd)/mlruns"
+        echo "Configuration de MLflow Enhanced (maximum data capture)..."
+        export MLFLOW_TRACKING_URI="file://$(pwd)/flue/mlruns"
         export MLFLOW_EXPERIMENT_NAME="FLUE_CLS_Books_HF"
         
-        echo "Lancement de l'évaluation CLS books avec MLflow..."
+        echo "Lancement de l'évaluation CLS books avec MLflow Enhanced..."
         source $config
-        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
+        python flue/enhanced_mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -308,9 +308,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
-            --report_to mlflow \
-            --run_name "cls_books_hf_$(date +%Y%m%d_%H%M%S)"
+            --per_device_eval_batch_size $batch_size
 
         # Check if training was successful
         if [ $? -ne 0 ]; then
@@ -372,12 +370,12 @@ case $TASK in
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/music/
         
         echo "Configuration de MLflow..."
-        export MLFLOW_TRACKING_URI="file://$(pwd)/mlruns"
+        export MLFLOW_TRACKING_URI="file://$(pwd)/flue/mlruns"
         export MLFLOW_EXPERIMENT_NAME="FLUE_CLS_Music"
         
-        echo "Lancement de l'évaluation CLS music avec MLflow..."
+        echo "Lancement de l'évaluation CLS music avec MLflow Enhanced..."
         source $config
-        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
+        python flue/enhanced_mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -393,9 +391,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
-            --report_to mlflow \
-            --run_name "cls_music_$(date +%Y%m%d_%H%M%S)"
+            --per_device_eval_batch_size $batch_size
 
         # Check if training was successful
         if [ $? -ne 0 ]; then
@@ -457,12 +453,12 @@ case $TASK in
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/dvd/
         
         echo "Configuration de MLflow..."
-        export MLFLOW_TRACKING_URI="file://$(pwd)/mlruns"
+        export MLFLOW_TRACKING_URI="file://$(pwd)/flue/mlruns"
         export MLFLOW_EXPERIMENT_NAME="FLUE_CLS_DVD"
         
-        echo "Lancement de l'évaluation CLS dvd avec MLflow..."
+        echo "Lancement de l'évaluation CLS dvd avec MLflow Enhanced..."
         source $config
-        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
+        python flue/enhanced_mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -478,9 +474,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
-            --report_to mlflow \
-            --run_name "cls_dvd_$(date +%Y%m%d_%H%M%S)"
+            --per_device_eval_batch_size $batch_size
 
         # Check if training was successful
         if [ $? -ne 0 ]; then
@@ -584,12 +578,12 @@ case $TASK in
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/pawsx/processed/
         
         echo "Configuration de MLflow..."
-        export MLFLOW_TRACKING_URI="file://$(pwd)/mlruns"
+        export MLFLOW_TRACKING_URI="file://$(pwd)/flue/mlruns"
         export MLFLOW_EXPERIMENT_NAME="FLUE_PAWSX"
         
-        echo "Lancement de l'évaluation PAWSX avec MLflow..."
+        echo "Lancement de l'évaluation PAWSX avec MLflow Enhanced..."
         source $config
-        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
+        python flue/enhanced_mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -605,9 +599,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
-            --report_to mlflow \
-            --run_name "pawsx_$(date +%Y%m%d_%H%M%S)"
+            --per_device_eval_batch_size $batch_size
 
         # Check if training was successful
         if [ $? -ne 0 ]; then
@@ -717,12 +709,12 @@ case $TASK in
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/xnli/processed/
         
         echo "Configuration de MLflow..."
-        export MLFLOW_TRACKING_URI="file://$(pwd)/mlruns"
+        export MLFLOW_TRACKING_URI="file://$(pwd)/flue/mlruns"
         export MLFLOW_EXPERIMENT_NAME="FLUE_XNLI"
         
-        echo "Lancement de l'évaluation XNLI avec MLflow..."
+        echo "Lancement de l'évaluation XNLI avec MLflow Enhanced..."
         source $config
-        python tools/transformers/examples/pytorch/text-classification/run_glue.py \
+        python flue/enhanced_mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -738,9 +730,7 @@ case $TASK in
             --test_file $test_file \
             --do_predict \
             --per_device_train_batch_size $batch_size \
-            --per_device_eval_batch_size $batch_size \
-            --report_to mlflow \
-            --run_name "xnli_$(date +%Y%m%d_%H%M%S)"
+            --per_device_eval_batch_size $batch_size
 
         # Check if training was successful
         if [ $? -ne 0 ]; then

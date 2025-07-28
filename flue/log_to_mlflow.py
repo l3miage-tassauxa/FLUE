@@ -10,6 +10,7 @@ import re
 import os
 from datetime import datetime
 import mlflow
+from mlflow_utils import get_mlflow_tracking_uri, get_experiment_name
 
 def extract_accuracy_from_text(accuracy_text):
     """Extract accuracy metrics from accuracy calculator output"""
@@ -26,9 +27,9 @@ def extract_accuracy_from_text(accuracy_text):
 def log_to_mlflow(eval_results_path, task_name, model_name, learning_rate, epochs, batch_size, accuracy_text=None):
     """Log evaluation results to MLflow"""
     
-    # Set tracking URI and experiment
-    mlflow.set_tracking_uri(f'file://{os.getcwd()}/mlruns')
-    experiment_name = f"FLUE_{task_name.upper()}"
+    # Use shared utilities for consistent setup
+    mlflow.set_tracking_uri(get_mlflow_tracking_uri())
+    experiment_name = get_experiment_name(task_name)
     mlflow.set_experiment(experiment_name)
     
     # Generate run name with timestamp
