@@ -371,7 +371,7 @@ case $TASK in
         
         echo "Configuration de MLflow..."
         export MLFLOW_TRACKING_URI="file://$(pwd)/flue/mlruns"
-        export MLFLOW_EXPERIMENT_NAME="FLUE_CLS_Music"
+        export MLFLOW_EXPERIMENT_NAME="FLUE_CLS_Music_HF"
         
         echo "Lancement de l'évaluation CLS music avec MLflow Enhanced..."
         source $config
@@ -454,7 +454,7 @@ case $TASK in
         
         echo "Configuration de MLflow..."
         export MLFLOW_TRACKING_URI="file://$(pwd)/flue/mlruns"
-        export MLFLOW_EXPERIMENT_NAME="FLUE_CLS_DVD"
+        export MLFLOW_EXPERIMENT_NAME="FLUE_CLS_DVD_HF"
         
         echo "Lancement de l'évaluation CLS dvd avec MLflow Enhanced..."
         source $config
@@ -579,7 +579,7 @@ case $TASK in
         
         echo "Configuration de MLflow..."
         export MLFLOW_TRACKING_URI="file://$(pwd)/flue/mlruns"
-        export MLFLOW_EXPERIMENT_NAME="FLUE_PAWSX"
+        export MLFLOW_EXPERIMENT_NAME="FLUE_PAWSX_HF"
         
         echo "Lancement de l'évaluation PAWSX avec MLflow Enhanced..."
         source $config
@@ -710,7 +710,7 @@ case $TASK in
         
         echo "Configuration de MLflow..."
         export MLFLOW_TRACKING_URI="file://$(pwd)/flue/mlruns"
-        export MLFLOW_EXPERIMENT_NAME="FLUE_XNLI"
+        export MLFLOW_EXPERIMENT_NAME="FLUE_XNLI_HF"
         
         echo "Lancement de l'évaluation XNLI avec MLflow Enhanced..."
         source $config

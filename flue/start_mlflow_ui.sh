@@ -26,16 +26,21 @@ if ! command -v mlflow &> /dev/null; then
 fi
 
 # Check if port 5000 is already in use
+USER=$(whoami)
 if lsof -Pi :5000 -sTCP:LISTEN -t >/dev/null ; then
-    echo "Port 5000 is already in use. Checking if it's MLflow..."
-    if ps aux | grep -q "mlflow.server"; then
-        echo "MLflow is already running on port 5000."
-        echo "Stopping existing MLflow processes..."
-        pkill -f "mlflow.server"
+    echo "Port 5000 is already in use. Checking if it's your MLflow process..."
+    if ps aux | grep -v grep | grep "$USER.*mlflow.server" > /dev/null; then
+        echo "Your MLflow is already running on port 5000."
+        echo "Stopping your existing MLflow processes..."
+        MLFLOW_PIDS=$(ps aux | grep -v grep | grep "$USER.*mlflow.server" | awk '{print $2}')
+        for pid in $MLFLOW_PIDS; do
+            kill "$pid"
+        done
         sleep 2
-        echo "Existing MLflow processes stopped."
+        echo "Your existing MLflow processes stopped."
     else
-        echo "Another service is using port 5000. Trying port 5001..."
+        PORT_OWNER=$(lsof -Pi :5000 -sTCP:LISTEN | tail -n +2 | awk '{print $3}' | head -1)
+        echo "Port 5000 is in use by another user ($PORT_OWNER). Trying port 5001..."
         PORT=5001
     fi
 else
