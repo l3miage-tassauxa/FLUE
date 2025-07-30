@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced MLflow wrapper for run_glue.py with maximum data capture
+MLflow wrapper for run_glue.py with maximum data capture
 This script provides comprehensive MLflow tracking with detailed metrics at every epoch.
 """
 
@@ -208,8 +208,8 @@ def log_training_configuration(args, task_name, model_name):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 enhanced_mlflow_run_glue.py [run_glue.py arguments...]")
-        print("Example: python3 enhanced_mlflow_run_glue.py --train_file data.csv --model_name_or_path bert-base --output_dir ./output")
+        print("Usage: python3 mlflow_run_glue.py [run_glue.py arguments...]")
+        print("Example: python3 mlflow_run_glue.py --train_file data.csv --model_name_or_path bert-base --output_dir ./output")
         print("\n🚀 This enhanced wrapper provides:")
         print("   📊 Metrics logged every epoch AND every step")
         print("   📈 Comprehensive training curves") 

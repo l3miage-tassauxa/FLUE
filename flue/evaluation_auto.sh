@@ -292,7 +292,7 @@ case $TASK in
         
         echo "Lancement de l'évaluation CLS books avec MLflow Enhanced..."
         source $config
-        python flue/enhanced_mlflow_run_glue.py \
+        python flue/mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -321,8 +321,7 @@ case $TASK in
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "Logging des résultats dans MLflow..."
-        python flue/log_to_mlflow.py "$output_dir/eval_results.json" "cls_books_hf" "$model_name_or_path" "$lr" "$epochs" "$batch_size" "$accuracy_output"
+        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
         ;;
     cls-music-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -375,7 +374,7 @@ case $TASK in
         
         echo "Lancement de l'évaluation CLS music avec MLflow Enhanced..."
         source $config
-        python flue/enhanced_mlflow_run_glue.py \
+        python flue/mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -404,8 +403,7 @@ case $TASK in
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "Logging des résultats dans MLflow..."
-        python flue/log_to_mlflow.py "$output_dir/eval_results.json" "cls_music" "$model_name_or_path" "$lr" "$epochs" "$batch_size" "$accuracy_output"
+        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
         ;;
     cls-dvd-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -458,7 +456,7 @@ case $TASK in
         
         echo "Lancement de l'évaluation CLS dvd avec MLflow Enhanced..."
         source $config
-        python flue/enhanced_mlflow_run_glue.py \
+        python flue/mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -487,8 +485,7 @@ case $TASK in
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "Logging des résultats dans MLflow..."
-        python flue/log_to_mlflow.py "$output_dir/eval_results.json" "cls_dvd" "$model_name_or_path" "$lr" "$epochs" "$batch_size" "$accuracy_output"
+        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
         ;;
     pawsx-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -583,7 +580,7 @@ case $TASK in
         
         echo "Lancement de l'évaluation PAWSX avec MLflow Enhanced..."
         source $config
-        python flue/enhanced_mlflow_run_glue.py \
+        python flue/mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -612,8 +609,7 @@ case $TASK in
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "Logging des résultats dans MLflow..."
-        python flue/log_to_mlflow.py "$output_dir/eval_results.json" "pawsx" "$model_name_or_path" "$lr" "$epochs" "$batch_size" "$accuracy_output" 
+        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
     ;;
     xnli-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -714,7 +710,7 @@ case $TASK in
         
         echo "Lancement de l'évaluation XNLI avec MLflow Enhanced..."
         source $config
-        python flue/enhanced_mlflow_run_glue.py \
+        python flue/mlflow_run_glue.py \
             --model_name_or_path $model_name_or_path \
             --output_dir $output_dir \
             --overwrite_output_dir \
@@ -743,8 +739,7 @@ case $TASK in
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "Logging des résultats dans MLflow..."
-        python flue/log_to_mlflow.py "$output_dir/eval_results.json" "xnli" "$model_name_or_path" "$lr" "$epochs" "$batch_size" "$accuracy_output"
+        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
         ;;
     
     parse)
