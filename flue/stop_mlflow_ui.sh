@@ -34,7 +34,7 @@ if ps aux | grep -v grep | grep "$USER.*mlflow.server" > /dev/null; then
         fi
     fi
     
-    echo "✅ MLflow UI stopped successfully for user $USER."
+    echo "[OK] MLflow UI stopped successfully for user $USER."
 else
     echo "No MLflow processes found running for user $USER."
 fi
@@ -42,14 +42,14 @@ fi
 # Check if port 5000 is still in use by this user's processes
 USER=$(whoami)
 if lsof -Pi :5000 -sTCP:LISTEN -t >/dev/null ; then
-    echo "⚠️  Port 5000 is still in use. Checking if it's owned by user $USER..."
+    echo "[WARNING]  Port 5000 is still in use. Checking if it's owned by user $USER..."
     PORT_OWNER=$(lsof -Pi :5000 -sTCP:LISTEN | tail -n +2 | awk '{print $3}' | head -1)
     if [ "$PORT_OWNER" = "$USER" ]; then
-        echo "⚠️  Port 5000 is in use by your process:"
+        echo "[WARNING]  Port 5000 is in use by your process:"
         lsof -Pi :5000 -sTCP:LISTEN | grep "$USER"
     else
-        echo "✅ Port 5000 is in use by another user ($PORT_OWNER), not interfering."
+        echo "[OK] Port 5000 is in use by another user ($PORT_OWNER), not interfering."
     fi
 else
-    echo "✅ Port 5000 is now available."
+    echo "[OK] Port 5000 is now available."
 fi

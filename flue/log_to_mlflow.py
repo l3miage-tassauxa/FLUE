@@ -72,7 +72,7 @@ def log_to_mlflow(eval_results_path, task_name, model_name, learning_rate, epoch
             if examples is not None:
                 mlflow.log_metric('num_examples', examples)
         
-        print(f"Résultats loggés dans MLflow avec succès!")
+        print(f"Resultats logges dans MLflow avec succes!")
         print(f"Experiment: {experiment_name}")
         print(f"Run: {run_name}")
 

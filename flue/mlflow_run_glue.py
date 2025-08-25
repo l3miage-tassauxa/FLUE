@@ -20,7 +20,7 @@ def setup_comprehensive_mlflow_environment(experiment_name, run_name=None):
     # Use shared utility for consistent setup
     config = setup_mlflow_environment(experiment_name)
     
-    print(f"🚀 MLflow Enhanced Tracking configuré:")
+    print(f"MLflow Enhanced Tracking configure:")
     print(f"  - URI: {config['tracking_uri']}")
     print(f"  - Experiment: {config['experiment_name']}")
     print(f"  - Mode: Let trainer handle run creation")
@@ -102,7 +102,7 @@ def run_glue_with_maximum_tracking(args):
     # Add all enhanced arguments to command
     cmd.extend(enhanced_args)
     
-    print(f"🔍 Enhanced tracking parameters added:")
+    print(f"Enhanced tracking parameters added:")
     i = 0
     while i < len(enhanced_args):
         if i + 1 < len(enhanced_args) and not enhanced_args[i+1].startswith('--'):
@@ -112,7 +112,7 @@ def run_glue_with_maximum_tracking(args):
             print(f"   {enhanced_args[i]}")
             i += 1
     
-    print(f"\n📋 Full command: {' '.join(cmd)}")
+    print(f"\nFull command: {' '.join(cmd)}")
     
     # Run the command with enhanced environment
     env = os.environ.copy()
@@ -201,21 +201,21 @@ def log_training_configuration(args, task_name, model_name):
     
     try:
         mlflow.log_artifact(config_file, "configuration")
-        print("✅ Training configuration logged to MLflow")
+        print("Training configuration logged to MLflow")
     except Exception as e:
-        print(f"⚠️ Warning: Could not save configuration: {e}")
+        print(f"Warning: Could not save configuration: {e}")
 
 
 def main():
     if len(sys.argv) < 2:
         print("Usage: python3 mlflow_run_glue.py [run_glue.py arguments...]")
         print("Example: python3 mlflow_run_glue.py --train_file data.csv --model_name_or_path bert-base --output_dir ./output")
-        print("\n🚀 This enhanced wrapper provides:")
-        print("   📊 Metrics logged every epoch AND every step")
-        print("   📈 Comprehensive training curves") 
-        print("   🔍 Gradient and convergence monitoring")
-        print("   💾 Complete training history artifacts")
-        print("   📋 Detailed parameter tracking")
+        print("\nThis wrapper provides:")
+        print("   Metrics logged every epoch AND every step")
+        print("   Comprehensive training curves") 
+        print("   Gradient and convergence monitoring")
+        print("   Complete training history artifacts")
+        print("   Detailed parameter tracking")
         sys.exit(1)
     
     # Get arguments for run_glue.py
@@ -235,28 +235,28 @@ def main():
     setup_comprehensive_mlflow_environment(experiment_name)
     
     # Don't start an MLflow run here - let the trainer handle it
-    print(f"\n🚀 Démarrage de l'entraînement avec suivi MLflow maximal:")
-    print(f"   📋 Task: {task_name}")
-    print(f"   🤖 Model: {model_name}")
-    print(f"   🔬 Experiment: {experiment_name}")
-    print(f"   📊 Tracking: Every epoch + every step")
-    print(f"   💾 Artifacts: Training curves, config, checkpoints")
-    print(f"   🎯 Mode: Single run managed by trainer")
+    print(f"\nDemarrage de l'entrainement avec suivi MLflow maximal:")
+    print(f"   Task: {task_name}")
+    print(f"   Model: {model_name}")
+    print(f"   Experiment: {experiment_name}")
+    print(f"   Tracking: Every epoch + every step")
+    print(f"   Artifacts: Training curves, config, checkpoints")
+    print(f"   Mode: Single run managed by trainer")
     
     result = run_glue_with_maximum_tracking(glue_args)
     
     # Report results
     if result.returncode == 0:
-        print(f"\n✅ Entraînement terminé avec succès!")
-        print(f"📊 Données complètes disponibles dans MLflow:")
+        print(f"\nEntrainement termine avec succes!")
+        print(f"Donnees completes disponibles dans MLflow:")
         print(f"   - Experiment: {experiment_name}")
-        print(f"   - Métriques: Chaque époque + chaque étape")
-        print(f"   - Artifacts: Courbes d'entraînement complètes")
+        print(f"   - Metriques: Chaque epoque + chaque etape")
+        print(f"   - Artifacts: Courbes d'entrainement completes")
         print(f"   - MLflow URI: {os.environ['MLFLOW_TRACKING_URI']}")
-        print(f"\n🌐 Pour visualiser: mlflow ui --backend-store-uri {os.environ['MLFLOW_TRACKING_URI']}")
+        print(f"\nPour visualiser: mlflow ui --backend-store-uri {os.environ['MLFLOW_TRACKING_URI']}")
     else:
-        print(f"\n❌ Entraînement échoué avec le code de retour: {result.returncode}")
-        print(f"📋 Configuration et logs partiels disponibles dans MLflow")
+        print(f"\nEntrainement echoue avec le code de retour: {result.returncode}")
+        print(f"Configuration et logs partiels disponibles dans MLflow")
     
     return result.returncode
 

@@ -317,11 +317,11 @@ case $TASK in
         fi
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
-        echo "Résultats d'évaluation avec intervalle de confiance:"
+        echo "Resultats d evaluation avec intervalle de confiance:"
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
+        echo "Entrainement et evaluation termines. Resultats dans MLflow Enhanced."
         ;;
     cls-music-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -399,11 +399,11 @@ case $TASK in
         fi
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
-        echo "Résultats d'évaluation avec intervalle de confiance:"
+        echo "Resultats d evaluation avec intervalle de confiance:"
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
+        echo "Entrainement et evaluation termines. Resultats dans MLflow Enhanced."
         ;;
     cls-dvd-HF)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -481,11 +481,11 @@ case $TASK in
         fi
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
-        echo "Résultats d'évaluation avec intervalle de confiance:"
+        echo "Resultats d evaluation avec intervalle de confiance:"
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
+        echo "Entrainement et evaluation termines. Resultats dans MLflow Enhanced."
         ;;
     pawsx-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -605,11 +605,11 @@ case $TASK in
         fi
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
-        echo "Résultats d'évaluation avec intervalle de confiance:"
+        echo "Resultats d evaluation avec intervalle de confiance:"
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
+        echo "Entrainement et evaluation termines. Resultats dans MLflow Enhanced."
     ;;
     xnli-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
@@ -735,11 +735,11 @@ case $TASK in
         fi
 
         echo "Calcul de la précision à partir des résultats Hugging Face..."
-        echo "Résultats d'évaluation avec intervalle de confiance:"
+        echo "Resultats d evaluation avec intervalle de confiance:"
         accuracy_output=$(python flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json)
         echo "$accuracy_output"
         
-        echo "✅ Entraînement et évaluation terminés. Résultats dans MLflow Enhanced."
+        echo "Entrainement et evaluation termines. Resultats dans MLflow Enhanced."
         ;;
     
     parse)
