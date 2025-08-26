@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 # Aurélien Tassaux
 
-# Quand on auras le DataSet FrenchTreeBank, on pourra faire un script similaire à celui de get-data-xnli.sh
+# When we have the FrenchTreeBank DataSet, we can make a script similar to get-data-xnli.sh

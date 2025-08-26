@@ -2,7 +2,7 @@
 # Copyright 2019 Hang Le
 # hangtp.le@gmail.com
 
-## Inutile car les données ont besoin d'être demandées pour estre téléchargées
+## Useless since the data needs to be requested to be downloaded
 
 set -e
 
