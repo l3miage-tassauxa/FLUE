@@ -70,7 +70,7 @@ case $TASK in
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You need to request access to the data at https://zenodo.org/record/3251672"
-            echo "and place the file in $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
             exit 1
         elif [ -d "$DATA_DIR/cls/raw/cls-acl10-unprocessed" ]; then
             echo "Data is already extracted."
@@ -136,7 +136,7 @@ case $TASK in
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You need to request access to the data at https://zenodo.org/record/3251672"
-            echo "and place the file in $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
             exit 1
         elif [ -d "$DATA_DIR/cls/raw/cls-acl10-unprocessed" ]; then
             echo "Data is already extracted."
@@ -202,7 +202,7 @@ case $TASK in
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You need to request access to the data at https://zenodo.org/record/3251672"
-            echo "and place the file in $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
             exit 1
         elif [ -d "$DATA_DIR/cls/raw/cls-acl10-unprocessed" ]; then
             echo "Data is already extracted."
@@ -269,7 +269,7 @@ case $TASK in
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You need to request access to the data at https://zenodo.org/record/3251672"
-            echo "and place the file 'cls-acl10-unprocessed.tar' in $DATA_DIR/cls/raw"
+            echo "et placer le fichier 'cls-acl10-unprocessed.tar' dans $DATA_DIR/cls/raw"
             exit 1
         elif [ -d "$DATA_DIR/cls/raw/cls-acl10-unprocessed" ]; then
             echo "Data is already extracted."
@@ -337,7 +337,7 @@ case $TASK in
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You need to request access to the data at https://zenodo.org/record/3251672"
-            echo "and place the file in $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
             exit 1
         elif [ -d "$DATA_DIR/cls/raw/cls-acl10-unprocessed" ]; then
             echo "Data is already extracted."
@@ -405,7 +405,7 @@ case $TASK in
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You need to request access to the data at https://zenodo.org/record/3251672"
-            echo "and place the file in $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
+            echo "et placer le fichier dans $DATA_DIR/cls/raw/cls-acl10-unprocessed.tar"
             exit 1
         elif [ -d "$DATA_DIR/cls/raw/cls-acl10-unprocessed" ]; then
             echo "Data is already extracted."
@@ -714,7 +714,7 @@ case $TASK in
         if [ ! -d "$DATA_DIR/wsd/FSE-1.1-10_12_19" ]; then
             echo "Error: WSD data is not available in $DATA_DIR/wsd/"
             echo "Please download the FrenchSemEval (FSE) dataset from http://www.llf.cnrs.fr/dataset/fse/"
-            echo "and extract it to the $DATA_DIR/wsd/ folder"
+            echo "et l'extraire dans le dossier $DATA_DIR/wsd/"
             exit 1
         else
             echo "WSD data found."
@@ -764,6 +764,6 @@ case $TASK in
         ;;
     *)
         echo "Please specify a valid task."
-        echo "Valid tasks: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-Mlflow, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx-HF, parse, wsd"
+        echo "Tasks valides: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-Mlflow, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx-HF, parse, wsd"
         exit 1
 esac
