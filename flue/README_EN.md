@@ -239,3 +239,89 @@ bash ./flue/evaluation_auto.sh my_new_task false test_config.cfg
 - `flue/examples/` : Configuration files
 - `flue/data/` : Evaluation datasets
 - Documentation in README files
+
+## Command Examples by Task Type
+
+### XLM Tasks
+```bash
+# Sentiment classification - Books
+./flue/evaluation_auto.sh cls-books-XLM false cls_books_lr5e6_xlm_base_cased.cfg
+
+# Sentiment classification - Music  
+./flue/evaluation_auto.sh cls-music-XLM false cls_music_lr5e6_xlm_base_cased.cfg
+
+# Sentiment classification - DVD
+./flue/evaluation_auto.sh cls-dvd-XLM false cls_dvd_lr5e6_xlm_base_cased.cfg
+
+# Paraphrase identification
+./flue/evaluation_auto.sh pawsx-XLM false pawsx_lr5e6_xlm_base_cased.cfg
+
+# Cross-lingual natural language inference
+./flue/evaluation_auto.sh xnli-XLM false xnli_lr5e6_xlm_base_cased.cfg
+```
+
+### Hugging Face Tasks
+```bash
+# Sentiment classification - Books
+./flue/evaluation_auto.sh cls-books-HF false cls_books_lr5e6_hf.cfg
+
+# Sentiment classification - Music
+./flue/evaluation_auto.sh cls-music-HF false cls_music_lr5e6_hf.cfg
+
+# Sentiment classification - DVD
+./flue/evaluation_auto.sh cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+# Paraphrase identification
+./flue/evaluation_auto.sh pawsx-HF false pawsx_lr5e6_hf.cfg
+```
+
+### MLflow Tasks
+
+#### MLflow Server Configuration
+Before running MLflow tasks, start the tracking server:
+```bash
+mlflow server --host 0.0.0.0 --port 5000
+```
+
+#### MLflow Evaluation Commands
+```bash
+# Sentiment classification with MLflow tracking - Books
+./flue/evaluation_auto.sh mlflow-cls-books-HF false cls_books_lr5e6_hf.cfg
+
+# Sentiment classification with MLflow tracking - Music
+./flue/evaluation_auto.sh mlflow-cls-music-HF false cls_music_lr5e6_hf.cfg
+
+# Sentiment classification with MLflow tracking - DVD
+./flue/evaluation_auto.sh mlflow-cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+# Paraphrase identification with MLflow tracking
+./flue/evaluation_auto.sh mlflow-pawsx-HF false pawsx_lr5e6_hf.cfg
+```
+
+## MLflow Usage Guide
+
+### Starting the Tracking Server
+
+1. **SSH Connection**: Connect to your SSH session (e.g., decore1)
+2. **Start server**: From the `FLUE` directory, run:
+   ```bash
+   mlflow server --host 0.0.0.0 --port 5000
+   ```
+3. **Access interface**: The interface becomes accessible via http://localhost:5000/
+
+### MLflow Tracking Features
+
+- **Local storage**: Results are stored locally in the `FLUE/mlruns` folder
+- **Empty interface initially**: No experiments appear at first, this is normal
+- **Future exploration**: Possible use of DataBricks for cloud-hosted evaluation results
+
+### Experiment Structure
+
+Once an `mlflow-<task_name>-HF` task is launched:
+
+- **Organization**: The experiment name appears on the left, with associated runs on the right
+- **Run composition**: Each experiment contains "runs" organized in pairs
+  - **First run**: `flaubert_basecased<date>_<time>` - contains hyperparameters and training metrics
+  - **Second run**: Random name - contains only final evaluation phase values
+
+**Note**: This default behavior has not yet been modified.

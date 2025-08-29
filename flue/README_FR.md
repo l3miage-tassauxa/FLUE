@@ -296,6 +296,8 @@ Notre contribution est basée sur le benchmark FLUE original. Veuillez citer l'a
 
 # XLM
 
+# XLM
+
 ./flue/evaluation_auto.sh cls-books-XLM false cls_books_lr5e6_xlm_base_cased.cfg
 
 ./flue/evaluation_auto.sh cls-music-XLM false cls_music_lr5e6_xlm_base_cased.cfg
@@ -305,6 +307,129 @@ Notre contribution est basée sur le benchmark FLUE original. Veuillez citer l'a
 ./flue/evaluation_auto.sh pawsx-XLM false pawsx_lr5e6_xlm_base_cased.cfg
 
 ./flue/evaluation_auto.sh xnli-XLM false xnli_lr5e6_xlm_base_cased.cfg
+
+# HuggingFace
+
+./flue/evaluation_auto.sh cls-books-HF false cls_books_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh cls-music-HF false cls_music_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh pawsx-HF false pawsx_lr5e6_hf.cfg
+
+# Mlflow
+
+mlflow server --host 0.0.0.0 --port 5000
+
+./flue/evaluation_auto.sh mlflow-cls-books-HF false cls_books_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh mlflow-cls-music-HF false cls_books_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh mlflow-cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh mlflow-pawsx-HF false pawsx_lr5e6_hf.cfg
+
+
+# Lancer une tâche de type mlflow:
+
+1) une fois connecté à une session ssh (ex: decore1), démarrer le tracking server depuis le répertoire `FLUE`:
+mlflow server --host 0.0.0.0 --port 5000
+
+L'interface deviens accessible via http://localhost:5000/ . Au début, aucune expérience n'est référencée. C'est normal puisque les résultats sont stockés localement (dans le dossier `FLUE/mlruns`).
+
+*NB: piste à explorer, utiliser DataBricks pour héberger les résultats d'évaluation dans le cloud*
+
+Une fois une première tâche de type mlflow-<nom_tâche>-HF lancée, le nom de l'expérience apparaît à gauche, avec les runs associées sur la droite. (Ajouter images ?)
+
+Chaque expérience est composée de "runs", dont chaque couple de run correspond à une tentative de fine tuning. La première run (ex: flaubert_basecased<date>_<heure>) recensera les hyperparamètres et le suivi des métriques d'entraînement, tandis que la seconde, au nom aléatoire, contiendra uniquement les dernières valeur de la phase d'évaluation. 
+Pour l'instant ce comportement par défaut n'a pas pu être changé.
+
+## Exemples de Commandes par Type de Tâche
+
+### Tâches XLM
+```bash
+# Classification de sentiments - Livres
+./flue/evaluation_auto.sh cls-books-XLM false cls_books_lr5e6_xlm_base_cased.cfg
+
+# Classification de sentiments - Musique  
+./flue/evaluation_auto.sh cls-music-XLM false cls_music_lr5e6_xlm_base_cased.cfg
+
+# Classification de sentiments - DVD
+./flue/evaluation_auto.sh cls-dvd-XLM false cls_dvd_lr5e6_xlm_base_cased.cfg
+
+# Identification de paraphrases
+./flue/evaluation_auto.sh pawsx-XLM false pawsx_lr5e6_xlm_base_cased.cfg
+
+# Inférence en langage naturel
+./flue/evaluation_auto.sh xnli-XLM false xnli_lr5e6_xlm_base_cased.cfg
+```
+
+### Tâches Hugging Face
+```bash
+# Classification de sentiments - Livres
+./flue/evaluation_auto.sh cls-books-HF false cls_books_lr5e6_hf.cfg
+
+# Classification de sentiments - Musique
+./flue/evaluation_auto.sh cls-music-HF false cls_music_lr5e6_hf.cfg
+
+# Classification de sentiments - DVD
+./flue/evaluation_auto.sh cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+# Identification de paraphrases
+./flue/evaluation_auto.sh pawsx-HF false pawsx_lr5e6_hf.cfg
+```
+
+### Tâches avec Suivi MLflow
+
+#### Configuration du Serveur MLflow
+Avant de lancer les tâches MLflow, démarrez le serveur de suivi :
+```bash
+mlflow server --host 0.0.0.0 --port 5000
+```
+
+#### Commandes d'Évaluation MLflow
+```bash
+# Classification de sentiments avec suivi MLflow - Livres
+./flue/evaluation_auto.sh mlflow-cls-books-HF false cls_books_lr5e6_hf.cfg
+
+# Classification de sentiments avec suivi MLflow - Musique
+./flue/evaluation_auto.sh mlflow-cls-music-HF false cls_music_lr5e6_hf.cfg
+
+# Classification de sentiments avec suivi MLflow - DVD
+./flue/evaluation_auto.sh mlflow-cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+# Identification de paraphrases avec suivi MLflow
+./flue/evaluation_auto.sh mlflow-pawsx-HF false pawsx_lr5e6_hf.cfg
+```
+
+## Guide d'Utilisation MLflow
+
+### Démarrage du Serveur de Suivi
+
+1. **Connexion SSH** : Connectez-vous à votre session SSH (ex: decore1)
+2. **Démarrage du serveur** : Depuis le répertoire `FLUE`, exécutez :
+   ```bash
+   mlflow server --host 0.0.0.0 --port 5000
+   ```
+3. **Accès à l'interface** : L'interface devient accessible via http://localhost:5000/
+
+### Fonctionnement du Suivi MLflow
+
+- **Stockage local** : Les résultats sont stockés localement dans le dossier `FLUE/mlruns`
+- **Interface vide au début** : Aucune expérience n'apparaît initialement, c'est normal
+- **Piste future** : Exploration possible de DataBricks pour l'hébergement cloud des résultats
+
+### Structure des Expériences
+
+Une fois qu'une tâche `mlflow-<nom_tâche>-HF` est lancée :
+
+- **Organisation** : Le nom de l'expérience apparaît à gauche, avec les runs associées à droite
+- **Composition des runs** : Chaque expérience contient des "runs" organisées par paires
+  - **Premier run** : `flaubert_basecased<date>_<heure>` - contient les hyperparamètres et métriques d'entraînement
+  - **Second run** : Nom aléatoire - contient uniquement les valeurs finales de la phase d'évaluation
+
+**Note** : Ce comportement par défaut n'a pas encore pu être modifié.
 
 # HuggingFace
 
