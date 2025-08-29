@@ -327,3 +327,18 @@ mlflow server --host 0.0.0.0 --port 5000
 ./flue/evaluation_auto.sh mlflow-cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
 
 ./flue/evaluation_auto.sh mlflow-pawsx-HF false pawsx_lr5e6_hf.cfg
+
+
+# Lancer une tâche de type mlflow:
+
+1) une fois connecté à une session ssh (ex: decore1), démarrer le tracking server depuis le répertoire `FLUE`:
+mlflow server --host 0.0.0.0 --port 5000
+
+L'interface deviens accessible via http://localhost:5000/ . Au début, aucune expérience n'est référencée. C'est normal puisque les résultats sont stockés localement (dans le dossier `FLUE/mlruns`).
+
+*NB: piste à explorer, utiliser DataBricks pour héberger les résultats d'évaluation dans le cloud*
+
+Une fois une première tâche de type mlflow-<nom_tâche>-HF lancée, le nom de l'expérience apparaît à gauche, avec les runs associées sur la droite. (Ajouter images ?)
+
+Chaque expérience est composée de “runs”, dont chaque couple de run correspond à une tentative de fine tuning. La première run (ex: flaubert_basecased<date>_<heure>) recensera les hyperparamètres et le suivi des métriques d’entraînement, tandis que la seconde, au nom aléatoire, contiendra uniquement les dernières valeur de la phase d'évaluation. 
+Pour l'instant ce comportement par défaut n'a pas pu être changé.
