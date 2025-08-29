@@ -5,111 +5,97 @@ FLUE (French Language Understanding Evaluation) is a comprehensive evaluation fr
 ## Quick Start
 
 1. **Clone the repository**
-2. **Place your model** in `flue/pretrained_models/your_model_name/`
+2. **Ensure you're in the FLUE root directory**
 3. **Run evaluation**:
    ```bash
-   bash ./flue/evaluation_auto.sh <task> <install_libs> [model_name] [config_file]
+   bash ./flue/evaluation_auto.sh <task> <install_libs> <config_file>
    ```
 
 ## Usage
 
-### Basic Command Structure
+### Command Structure
 
 ```bash
-bash ./flue/evaluation_auto.sh <task> <install_libs> [model_name] [config_file]
+bash ./flue/evaluation_auto.sh <task> <install_libs> <config_file>
 ```
 
-**Parameters:**
-- `<task>`: Required. The evaluation task to run
-- `<install_libs>`: Required. Whether to install dependencies (`true`/`false`)
-- `[model_name]`: Optional. Name of your model directory (default: `flaubert_base_cased`)
-- `[config_file]`: Optional. Path to custom configuration file
+**All three parameters are required:**
+- `<task>`: The evaluation task to run
+- `<install_libs>`: Whether to install dependencies (`true`/`false`)
+- `<config_file>`: Configuration file name (must exist in `flue/examples/`)
+
+### Get Help
+
+```bash
+bash ./flue/evaluation_auto.sh --help
+# or
+bash ./flue/evaluation_auto.sh -h
+```
 
 ### Available Tasks
 
-#### Hugging Face Tasks (Recommended)
-- **`cls-HF`**: Cross-lingual sentiment analysis with Hugging Face Transformers
-- **`xnli-HF`**: Cross-lingual natural language inference with Hugging Face Transformers
+#### XLM-based Tasks
+- `cls-books-XLM` : Sentiment classification - books
+- `cls-music-XLM` : Sentiment classification - music  
+- `cls-dvd-XLM` : Sentiment classification - DVD
+- `xnli-XLM` : Cross-lingual natural language inference
+- `pawsx-XLM` : Paraphrase identification
 
-#### XLM Tasks (Legacy)
-- **`cls-XLM`**: Cross-lingual sentiment analysis with XLM framework
-- **`xnli-XLM`**: Cross-lingual natural language inference with XLM framework
-- **`pawsx`**: Paraphrase Adversaries from Word Scrambling for Cross-lingual Understanding
+#### Hugging Face Tasks
+- `cls-books-HF` : Books classification - HF
+- `cls-music-HF` : Music classification - HF
+- `cls-dvd-HF` : DVD classification - HF
+- `pawsx-HF` : PAWSX with Hugging Face
+
+#### MLflow Tasks
+- `mlflow-cls-books-HF` : Books classification with MLflow tracking
+- `mlflow-cls-music-HF` : Music classification with MLflow tracking
+- `mlflow-cls-dvd-HF` : DVD classification with MLflow tracking
+- `mlflow-pawsx-HF` : PAWSX with MLflow tracking
+
+#### Unimplemented Tasks
+- `xnli-HF` : XNLI with Hugging Face integration (to be implemented)
+- `parsing` : Syntactic parsing (to be implemented)
+- `wsd` : Word sense disambiguation (to be implemented)
 
 ## Examples
 
-### 1. Evaluate with Default Model
-
+### Sentiment Classification (Books)
 ```bash
-# Use default flaubert_base_cased model, install libraries
-bash ./flue/evaluation_auto.sh xnli-HF true
-
-# Use default model, skip library installation
-bash ./flue/evaluation_auto.sh cls-HF false
+bash ./flue/evaluation_auto.sh cls-books-XLM true cls_books_lr5e6_xlm_base_cased.cfg
 ```
 
-### 2. Evaluate with Your Own Model
-
+### XNLI with Dependencies Installation
 ```bash
-# Evaluate your custom model
-bash ./flue/evaluation_auto.sh xnli-HF true my_french_model
-
-# Evaluate CamemBERT
-bash ./flue/evaluation_auto.sh cls-HF false camembert-base
+bash ./flue/evaluation_auto.sh xnli-XLM true xnli_config_xlm_base_cased.cfg
 ```
 
-### 3. Use Custom Configuration
-
+### Hugging Face Task
 ```bash
-# Use your own configuration file
-bash ./flue/evaluation_auto.sh xnli-HF true my_model path/to/my_config.cfg
+bash ./flue/evaluation_auto.sh cls-books-HF false cls_books_lr5e6_hf.cfg
 ```
 
-## Model Configuration
-
-### Directory Structure
-
-Place your models in the `flue/pretrained_models/` directory:
-
-```
-flue/pretrained_models/
-├── flaubert_base_cased/          # Default model
-├── my_french_model/              # Your custom model
-├── camembert-base/               # CamemBERT
-└── your_model_name/              # Any other model
-    ├── config.json
-    ├── pytorch_model.bin (or model.safetensors)
-    ├── tokenizer.json
-    ├── tokenizer_config.json
-    └── vocab.txt
+### PAWSX Task
+```bash
+bash ./flue/evaluation_auto.sh pawsx-HF true pawsx_config_hf.cfg
 ```
 
-### Supported Model Types
+## Configuration
 
-- **FlauBERT**: `flaubert_base_cased`, `flaubert_base_uncased`
-- **CamemBERT**: `camembert-base`, `camembert-large`
-- **Custom models**: Any Hugging Face compatible French model
-- **Fine-tuned models**: Your own fine-tuned versions
+### Available Configuration Files
 
-## Configuration Files
+The framework includes configurations in `flue/examples/`:
+- `cls_books_lr5e6_xlm_base_cased.cfg` - Books classification (XLM)
+- `cls_books_lr5e6_hf.cfg` - Books classification (HF)
+- Other task-specific configurations
 
-### Default Configurations
-
-The framework includes default configurations in `flue/examples/`:
-- `xnli_lr5e6_hf_base_uncased.cfg` - Default XNLI configuration
-- `cls_books_lr5e6_hf_base_uncased.cfg` - Default CLS configuration
-- `xnli_lr5e6_xlm_base_cased.cfg` - XLM XNLI configuration
-- `pawsx_lr5e6_xlm_base_cased.cfg` - PAWSX configuration
-
-### Custom Configuration
-
-Create your own `.cfg` file with these parameters:
+### Configuration File Structure
 
 ```bash
 # Model parameters
 model_type=flaubert
-model_name=my_model
-model_name_or_path=flue/pretrained_models/my_model
+model_name=flaubert_base_cased
+model_name_or_path=flue/pretrained_models/flaubert_base_cased
 
 # Training parameters
 batch_size=8
@@ -122,26 +108,28 @@ data_dir=flue/data/xnli/processed-csv
 train_file=flue/data/xnli/processed-csv/train.csv
 validation_file=flue/data/xnli/processed-csv/valid.csv
 test_file=flue/data/xnli/processed-csv/test.csv
-
-# Output
-output_dir=flue/experiments/my_model/results
-max_seq_length=512
 ```
 
 ## Data Requirements
 
-### XNLI Task
-- **Automatic**: Data is downloaded automatically from Facebook's XNLI dataset
-- **No manual configuration required**
+Tasks require different datasets:
 
-### CLS Task
-1. **Manual download required**: Visit [https://zenodo.org/record/3251672](https://zenodo.org/record/3251672)
-2. **Request access** to the CLS dataset
-3. **Place the file**: `cls-acl10-unprocessed.tar.gz` in `flue/data/cls/raw/`
+### Classification Tasks (CLS)
+- **Location**: `flue/data/cls/`
+- **Required file**: `cls-acl10-unprocessed.tar.gz`
+- **Download**: Available from Zenodo (see main documentation)
 
-### PAWSX Task
-- **Automatic**: Data is downloaded automatically
-- **No manual configuration required**
+### XNLI Tasks
+- **Location**: `flue/data/xnli/`
+- **Required files**: French-translated XNLI data
+- **Format**: Processed CSV files
+
+### PAWSX Tasks
+- **Location**: `flue/data/pawsx/`
+- **Required files**: French PAWSX data
+
+### Parsing/WSD Tasks
+- **Status**: Not implemented (under development)
 
 ## Results
 
@@ -166,83 +154,88 @@ The framework automatically calculates and displays:
 
 ### Common Issues
 
-1. **Model not found**
+1. **Insufficient arguments**
    ```
-   Error: Model 'my_model' not found in flue/pretrained_models/
+   Usage: bash ./flue/evaluation_auto.sh <task> <install_libs> <config_file>
    ```
-   **Solution**: Ensure your model directory exists with all required files
+   **Solution**: Provide all three required parameters
 
-2. **Data not found (CLS)**
+2. **Invalid task**
+   ```
+   Please specify a valid task.
+   ```
+   **Solution**: Use `--help` to see available tasks
+
+3. **Configuration file not found**
+   ```
+   Configuration file 'my_config.cfg' not found
+   ```
+   **Solution**: Ensure the file exists in `flue/examples/`
+
+4. **Data not found (CLS)**
    ```
    Error: cls-acl10-unprocessed.tar.gz not found
    ```
-   **Solution**: Download CLS data from Zenodo (see Data Requirements)
+   **Solution**: Download CLS data from Zenodo
 
-3. **GPU memory issues**
-   - Reduce `batch_size` in your configuration file
-   - Use a smaller model
-   - Reduce `max_seq_length`
-
-4. **Permission denied**
+5. **Permission denied**
    ```
    Error: Permission denied
    ```
    **Solution**: Run `chmod +x ./flue/evaluation_auto.sh`
 
-5. **Missing parameter**
+6. **Unimplemented tasks**
    ```
-   Please specify whether libraries should be installed (true/false).
+   task not yet implemented...
    ```
-   **Solution**: The script now validates parameters for each task - ensure you provide all required arguments
+   **Solution**: These tasks are under development
 
 ### Dependencies
 
 Install required libraries by setting the second parameter to `true`:
-
 ```bash
-bash ./flue/evaluation_auto.sh xnli-HF true
+bash ./flue/evaluation_auto.sh my_task true my_config.cfg
 ```
 
-This installs:
-- transformers
-- datasets
-- torch
-- pandas
-- scikit-learn
-- Other dependencies from `libraries/hg-requirements.txt`
-
-## Advanced Usage
-
-### Environment Variables
-
-You can override configuration parameters via environment variables:
-```bash
-export MODEL_NAME=my_custom_model
-export BATCH_SIZE=16
-bash ./flue/evaluation_auto.sh xnli-HF false
-```
-
-### Custom Evaluation Metrics
-
-Add your own evaluation scripts following the pattern of:
-- `flue/accuracy_from_hf.py` - Hugging Face results processing
-- `flue/accuracy_from_task3.py` - XLM results processing
-
-### Modular Argument Validation
-
-The script now uses a modular approach for argument validation:
-- Each task validates its own required parameters
-- `INSTALL_LIBS` validation is done at the task level
-- This improves maintainability and code clarity
+The script will automatically install:
+- XLM dependencies (for XLM tasks)
+- Hugging Face dependencies (for HF tasks)
 
 ## Contributing
 
-To add new tasks or models:
-1. Create configuration files in `flue/examples/`
-2. Add case handling in `evaluation_auto.sh`
-3. Implement data preprocessing if needed
-4. Add result processing scripts
+### Adding a New Task
 
-## License
+To implement a new task in `evaluation_auto.sh`:
 
-This framework is based on the original FLUE benchmark. Please cite the original paper when using this evaluation framework.
+1. **Add the case in the switch**:
+```bash
+"my_new_task")
+    echo "Running my new task..."
+    # Your implementation code here
+    ;;
+```
+
+2. **Add to help**:
+```bash
+# In show_usage() function, add:
+echo "  my_new_task    : Description of my task"
+```
+
+3. **Test implementation**:
+```bash
+bash ./flue/evaluation_auto.sh my_new_task false test_config.cfg
+```
+
+### Contributing Guidelines
+
+- Keep consistency with existing tasks
+- Add appropriate error messages
+- Document new tasks in README files
+- Test with different configurations
+
+### File Structure
+
+- `evaluation_auto.sh` : Main evaluation script
+- `flue/examples/` : Configuration files
+- `flue/data/` : Evaluation datasets
+- Documentation in README files
