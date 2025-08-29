@@ -2,13 +2,43 @@
 
 FLUE (French Language Understanding Evaluation) est un framework d'évaluation complet pour les modèles de langue française. Ce guide explique comment utiliser le script `evaluation_auto.sh` pour évaluer vos modèles sur diverses tâches de TAL français.
 
+# Note
+/!\ ce dépôt est encore en construction, certaines fonctionnalités ne sont pas encore implémentées ou risquent de ne pas correctement fonctionner.
+
+## Prérequis
+1) cloner le dépôt transformers https://github.com/formiel/transformers et le placer dans le répertoire `FLUE/tools`
+
+2) Avant d'exécuter un premier fine-tuning, il faut créer un nouvel environnement python, et installer la version de PyTorch compatible avec sa carte graphique.
+
+Pour cela, il existe un tableau qui référence les cartes graphiques avec leur capacité de calcul:
+- [CUDA GPU Compute Capability](https://developer.nvidia.com/cuda-gpus#compute)
+- [Legacy CUDA GPU Compute Capability](https://developer.nvidia.com/cuda-legacy-gpus)
+- [Installation de PyTorch + CUDA](https://pytorch.org/get-started/locally/)
+
+Par exemple, avec PyTorch 2.7.1 sont prises en charge les cartes graphiques avec une capacité de calcul comprise entre 5.0 et 9.0
+
+```bash
+python -c "import torch; print(torch.__version__)"
+
+2.7.1+cu126
+
+python -c "import torch; print(torch.cuda.get_arch_list())"
+
+['sm_50', 'sm_60', 'sm_70', 'sm_75', 'sm_80', 'sm_86', 'sm_90']
+```
+
+Une fois l'installation terminée, il est possible de lancer `evaluation_auto.sh` depuis le répertoire racine du projet `FLUE`
+
 ## Démarrage Rapide
 
-1. **Cloner le dépôt**
-2. **Placer votre modèle** dans `flue/pretrained_models/nom_de_votre_modele/`
-3. **Lancer l'évaluation** :
+
+1. **Placer votre modèle** dans `flue/pretrained_models/<nom_de_votre_modele>`
+
+2. **Démarrer le fine-tuning d'une tâche**
+
+se placer dans le répertoire `FLUE` et lancer:
    ```bash
-   bash ./flue/evaluation_auto.sh <tache> <installer_libs> [nom_modele] [fichier_config]
+   ./flue/evaluation_auto.sh <tâche> <installer_libs> <fichier_config>
    ```
 
 ## Utilisation
@@ -25,16 +55,23 @@ bash ./flue/evaluation_auto.sh <tache> <installer_libs> [nom_modele] [fichier_co
 - `[nom_modele]` : Optionnel. Le nom du répertoire de votre modèle (défaut : `flaubert_base_cased`)
 - `[fichier_config]` : Optionnel. Chemin vers un fichier de configuration personnalisé
 
-### Tâches Disponibles
+### Tâches Disponibles sur `evaluation_auto.sh`
 
-#### Tâches Hugging Face (Recommandées)
+#### Tâches avec la librairie Hugging Face Transformers (Recommandées)
 - **`cls-HF`** : Analyse de sentiment cross-lingue avec Hugging Face Transformers
 - **`xnli-HF`** : Inférence en langage naturel cross-lingue avec Hugging Face Transformers
 
-#### Tâches XLM (Héritées)
+#### Tâches avec la librairie XLM (Dépassé)
 - **`cls-XLM`** : Analyse de sentiment cross-lingue avec le framework XLM
 - **`xnli-XLM`** : Inférence en langage naturel cross-lingue avec le framework XLM
 - **`pawsx`** : Paraphrase Adversaries from Word Scrambling for Cross-lingual Understanding
+
+#### Tâches Hugging Face avec suivi sur Mlflow
+- **`mlflow-cls-books-HF`**
+- **`mlflow-cls-music-HF`** 
+- **`mlflow-cls-dvd-HF`** 
+- **`mlflow-pawsx-HF`**
+
 
 ## Exemples
 
@@ -83,13 +120,6 @@ flue/pretrained_models/
     ├── tokenizer_config.json
     └── vocab.txt
 ```
-
-### Types de Modèles Supportés
-
-- **FlauBERT** : `flaubert_base_cased`, `flaubert_base_uncased`
-- **CamemBERT** : `camembert-base`, `camembert-large`
-- **Modèles personnalisés** : Tout modèle français compatible Hugging Face
-- **Modèles fine-tunés** : Vos propres versions fine-tunées
 
 ## Fichiers de Configuration
 
@@ -244,4 +274,38 @@ Pour ajouter de nouvelles tâches ou modèles :
 
 ## Licence
 
-Ce framework est basé sur le benchmark FLUE original. Veuillez citer l'article original lors de l'utilisation de ce framework d'évaluation.
+Notre contribution est basée sur le benchmark FLUE original. Veuillez citer l'article lors de l'utilisation de ce framework d'évaluation.
+
+# XLM
+
+./flue/evaluation_auto.sh cls-books-XLM false cls_books_lr5e6_xlm_base_cased.cfg
+
+./flue/evaluation_auto.sh cls-music-XLM false cls_music_lr5e6_xlm_base_cased.cfg
+
+./flue/evaluation_auto.sh cls-dvd-XLM false cls_dvd_lr5e6_xlm_base_cased.cfg
+
+./flue/evaluation_auto.sh pawsx-XLM false pawsx_lr5e6_xlm_base_cased.cfg
+
+./flue/evaluation_auto.sh xnli-XLM false xnli_lr5e6_xlm_base_cased.cfg
+
+# HuggingFace
+
+./flue/evaluation_auto.sh cls-books-HF false cls_books_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh cls-music-HF false cls_music_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh pawsx-HF false pawsx_lr5e6_hf.cfg
+
+# Mlflow
+
+mlflow server --host 0.0.0.0 --port 5000
+
+./flue/evaluation_auto.sh mlflow-cls-books-HF false cls_books_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh mlflow-cls-music-HF false cls_music_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh mlflow-cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh mlflow-pawsx-HF false pawsx_lr5e6_hf.cfg

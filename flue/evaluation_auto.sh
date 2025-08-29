@@ -8,23 +8,23 @@ EXAMPLES_DIR="flue/examples"
 
 show_usage() {
     cat << EOF
-    Usage: $0 <task> <install_libs> <config_file>
+    Usage: $0 <task> <install_libs> <install_lib> <config_file>
 
     Tasks:
-    XLM-based:
-        - cls-books-XLM, cls-music-XLM, cls-dvd-XLM
-        - xnli-XLM, pawsx-XLM
+        XLM based:
+            - cls-books-XLM, cls-music-XLM, cls-dvd-XLM
+            - xnli-XLM, pawsx-XLM
+        
+        Hugging Face based:
+            - cls-books-HF, cls-music-HF, cls-dvd-HF
+            - pawsx-HF, xnli-HF
+        
+        MLflow enabled:
+            - mlflow-cls-books-HF, mlflow-cls-music-HF, mlflow-cls-dvd-HF
+            - mlflow-pawsx-HF
     
-    Hugging Face-based:
-        - cls-books-HF, cls-music-HF, cls-dvd-HF
-        - pawsx-HF, xnli-HF
-    
-    MLflow-enabled:
-        - mlflow-cls-books-HF, mlflow-cls-music-HF, mlflow-cls-dvd-HF
-        - mlflow-pawsx-HF
-    
-    Others:
-        - parsing, wsd
+        Others:
+            - parsing, wsd
 
     Install libs: true/false
     Config file: path to configuration file in '$EXAMPLES_DIR/' directory
