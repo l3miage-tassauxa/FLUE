@@ -4,14 +4,46 @@
 # Macros
 DATA_DIR=./flue/data
 MODEL_DIR=./flue/pretrained_models/
+EXAMPLES_DIR="flue/examples"
 
-# Check the first argument (task)
-if [ -z "$1" ]; then
-        echo "Usage: ./evaluation_auto.sh <task> <install_libs> <config_file>"
-        echo "Tasks: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx-HF, parsing, wsd, mlflow-cls-books-HF, mlflow-cls-music-HF, mlflow-cls-dvd-HF, mlflow-pawsx-HF"
-        echo "Install libs: true/false"
-        echo "Config file: path to a custom configuration file"
-        exit 1
+show_usage() {
+    cat << EOF
+    Usage: $0 <task> <install_libs> <config_file>
+
+    Tasks:
+    XLM-based:
+        - cls-books-XLM, cls-music-XLM, cls-dvd-XLM
+        - xnli-XLM, pawsx-XLM
+    
+    Hugging Face-based:
+        - cls-books-HF, cls-music-HF, cls-dvd-HF
+        - pawsx-HF, xnli-HF
+    
+    MLflow-enabled:
+        - mlflow-cls-books-HF, mlflow-cls-music-HF, mlflow-cls-dvd-HF
+        - mlflow-pawsx-HF
+    
+    Others:
+        - parsing, wsd
+
+    Install libs: true/false
+    Config file: path to configuration file in '$EXAMPLES_DIR/' directory
+
+    Examples:
+    $0 cls-books-XLM true cls_books_lr5e6_xlm_base_cased.cfg
+    $0 cls-books-HF false cls_books_lr5e6_hf.cfg
+EOF
+}
+
+if [[ $# -lt 3 ]]; then
+    echo "Insufficient arguments provided"
+    show_usage
+    exit 1
+fi
+
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    show_usage
+    exit 0
 fi
 
 # Parameters
@@ -19,55 +51,105 @@ TASK=$1
 INSTALL_LIBS=$2
 CUSTOM_CONFIG=$3
 
-echo "=== FLUE Evaluation ==="
-echo "Task: $TASK"
-echo "Install libraries: $INSTALL_LIBS"
-if [ ! -z "$CUSTOM_CONFIG" ]; then
-    echo "Custom configuration: $CUSTOM_CONFIG"
+if [[ "$(basename "$PWD")" != "FLUE" ]]; then
+    echo "Please run this script from the FLUE root directory"
+    exit 1
 fi
 
-# Check the current directory
-if [ "$(basename "$PWD")" != "FLUE" ]; then
-    echo "Please position the terminal in the FLUE directory, the root of the project."
-    exit 1
+# Check if config file exists
+if [[ -n "$CUSTOM_CONFIG" ]]; then
+    config_path="$EXAMPLES_DIR/$CUSTOM_CONFIG"
+    if [[ ! -f "$config_path" ]]; then
+        echo "Configuration file '$config_path' not found"
+        exit 1
+    fi
+    echo "Using configuration: $config_path"
+    source $config_path
+fi
+
+# Dependency installation functions
+install_xlm_dependencies() {
+    echo "Installing XLM dependencies..."
+
+    if ! pip install -r ./libraries/xlm-requirements.txt; then
+        echo "Failed to install XLM requirements"
+        exit 1
+    fi
+    
+    cd "./tools"
+    
+    # Clone repositories if they don't exist
+    local repos=(
+        "https://github.com/attardi/wikiextractor.git"
+        "https://github.com/moses-smt/mosesdecoder.git"
+        "https://github.com/glample/fastBPE.git"
+    )
+    
+    for repo in "${repos[@]}"; do
+        local repo_name
+        repo_name=$(basename "$repo" .git)
+        if [[ ! -d "$repo_name" ]]; then
+            echo "Cloning $repo_name..."
+            if ! git clone "$repo"; then
+                echo "Failed to clone $repo"
+                exit 1
+            fi
+        else
+            echo "$repo_name already exists, skipping clone"
+        fi
+    done
+    
+    # Build fastBPE
+    cd "./fastBPE"    
+    if ! g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast; then
+        echo "Failed to build fastBPE"
+        exit 1
+    fi
+    
+    cd ../../
+    
+    echo "XLM dependencies installed successfully"
+}
+
+install_hf_dependencies() {
+    echo "Installing Hugging Face dependencies..."
+    
+    if ! pip install -r ./libraries/hg-requirements.txt; then
+        echo "Failed to install HF requirements"
+        exit 1
+    fi
+    
+    echo "Hugging Face dependencies installed successfully"
+}
+
+# Install dependencies based on task type
+if [[ $INSTALL_LIBS == true ]]; then
+    case "$TASK" in
+        *-XLM)
+            install_xlm_dependencies
+            ;;
+        *-HF|mlflow-*-HF)
+            install_hf_dependencies
+            ;;
+    esac
+else
+    echo "Library installation skipped"
+fi
+
+# Permissions
+echo "Adding execution permissions to scripts..."
+chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py $DATA_DIR/hg_data_tsv_to_csv.py
+chmod +x ./flue/prepare-data-pawsx.sh ./flue/get-data-pawsx.sh
+chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py ./flue/extract_xnli.py
+chmod +x ./flue/accuracy_calculator.py
+
+if [[ "$TASK" == *-XLM ]]; then
+    chmod +r "./flue/pretrained_models/$model_name"/*
 fi
 
 # Launch based on the task
 case $TASK in
     cls-books-XLM)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/XLM-requirements.txt
-            cd ./tools
-            git clone https://github.com/attardi/wikiextractor.git
-            git clone https://github.com/moses-smt/mosesdecoder.git
-            git clone https://github.com/glample/fastBPE.git
-            cd ./fastBPE
-            g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
-            cd ../..
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py
-        chmod +x ./flue/pretrained_models/$model_name/*
-
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You must request the data at https://zenodo.org/record/3251672"
@@ -105,39 +187,6 @@ case $TASK in
         python3 flue/accuracy_calculator.py --predictions_file $output_dir/test.pred.$((num_epochs - 1)) --labels_file $DATA_DIR/cls/processed/books/test.label --format xlm --task cls
     ;;
     cls-music-XLM)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/XLM-requirements.txt
-            cd ./tools
-            git clone https://github.com/attardi/wikiextractor.git
-            git clone https://github.com/moses-smt/mosesdecoder.git
-            git clone https://github.com/glample/fastBPE.git
-            cd ./fastBPE
-            g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
-            cd ../..
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-        
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py
-        chmod +x ./flue/pretrained_models/$model_name/*
-
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You must request the data at https://zenodo.org/record/3251672"
@@ -175,39 +224,6 @@ case $TASK in
         python3 flue/accuracy_calculator.py --predictions_file $output_dir/test.pred.$((num_epochs - 1)) --labels_file $DATA_DIR/cls/processed/music/test.label --format xlm --task cls
         ;;
     cls-dvd-XLM)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/XLM-requirements.txt
-            cd ./tools
-            git clone https://github.com/attardi/wikiextractor.git
-            git clone https://github.com/moses-smt/mosesdecoder.git
-            git clone https://github.com/glample/fastBPE.git
-            cd ./fastBPE
-            g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
-            cd ../..
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-        
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py
-        chmod +x ./flue/pretrained_models/$model_name/*
-        
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You must request the data at https://zenodo.org/record/3251672"
@@ -244,32 +260,6 @@ case $TASK in
         python3 flue/accuracy_calculator.py --predictions_file $output_dir/test.pred.$((num_epochs - 1)) --labels_file $DATA_DIR/cls/processed/dvd/test.label --format xlm --task cls
     ;;
     cls-books-HF)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-        
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py $DATA_DIR/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_calculator.py
-        
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You must request the data at https://zenodo.org/record/3251672"
@@ -316,32 +306,6 @@ case $TASK in
             python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
     ;;
     mlflow-cls-books-HF)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py $DATA_DIR/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_calculator.py
-        
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You must request the data at https://zenodo.org/record/3251672"
@@ -386,31 +350,6 @@ case $TASK in
         python tools/mlflow/mlflow_finetuning.py --command "$cmd" --experiment "Text Classification (CLS) - Books" --model ${model_name} --tracking_uri ${mlflow_tracking_uri}
     ;;
     cls-music-HF)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-        
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py $DATA_DIR/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_calculator.py
         echo "Retrieving CLS data..."
         
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
@@ -458,32 +397,6 @@ case $TASK in
             python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
         ;;
     mlflow-cls-music-HF)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py $DATA_DIR/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_calculator.py
-
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You must request the data at https://zenodo.org/record/3251672"
@@ -519,31 +432,6 @@ case $TASK in
         python tools/mlflow/mlflow_finetuning.py --command "$cmd" --experiment "Text Classification (CLS) - Music" --model ${model_name} --tracking_uri ${mlflow_tracking_uri}
     ;;
     cls-dvd-HF)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py $DATA_DIR/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_calculator.py
-
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You must request the data at https://zenodo.org/record/3251672"
@@ -590,32 +478,6 @@ case $TASK in
             python3 flue/accuracy_calculator.py --eval_results $output_dir/eval_results.json
         ;;
     mlflow-cls-dvd-HF)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-cls.sh ./flue/extract_split_cls.py $DATA_DIR/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_calculator.py
-
         echo "Retrieving CLS data..."
         if [ ! -f "$DATA_DIR/cls/raw/cls-acl10-unprocessed.tar.gz" ]; then
             echo "You must request the data at https://zenodo.org/record/3251672"
@@ -660,31 +522,6 @@ case $TASK in
         python tools/mlflow/mlflow_finetuning.py --command "$cmd" --experiment "Text Classification (CLS) - DVD" --model ${model_name} --tracking_uri ${mlflow_tracking_uri}
     ;;
     pawsx-XLM)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/XLM-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/prepare-data-pawsx.sh ./flue/flue_xnli.py ./flue/get-data-pawsx.sh
-        
         echo "Retrieving PAWSX data..."
         ./flue/get-data-pawsx.sh $DATA_DIR/pawsx
         echo "Preparing PAWSX data..."
@@ -708,32 +545,6 @@ case $TASK in
                         --max_vocab $max_vocab
         ;;
     pawsx-HF)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-        
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/get-data-pawsx.sh ./flue/extract_pawsx.py $DATA_DIR/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_calculator.py
-
         echo "Retrieving PAWSX data..."
         ./flue/get-data-pawsx.sh $DATA_DIR/pawsx
         echo "Preparing PAWSX data..."
@@ -764,32 +575,6 @@ case $TASK in
             --per_device_eval_batch_size $batch_size 
     ;;
     mlflow-pawsx-HF)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/hg-requirements.txt
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/get-data-pawsx.sh ./flue/extract_pawsx.py $DATA_DIR/hg_data_tsv_to_csv.py
-        chmod +x ./flue/accuracy_calculator.py
-
         echo "Retrieving PAWSX data..."
         ./flue/get-data-pawsx.sh $DATA_DIR/pawsx
         echo "Preparing PAWSX data..."
@@ -822,39 +607,6 @@ case $TASK in
         python tools/mlflow/mlflow_finetuning.py --command "$cmd" --experiment "Paraphrasing - PAWSX" --model ${model_name} --tracking_uri ${mlflow_tracking_uri}
     ;;
     xnli-XLM)
-        if [ -z "$INSTALL_LIBS" ]; then
-            echo "Please specify whether libraries should be installed (true/false)."
-            exit 1
-        fi
-        if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
-            pip install -r ./libraries/XLM-requirements.txt
-            cd ./tools
-            git clone https://github.com/attardi/wikiextractor.git
-            git clone https://github.com/moses-smt/mosesdecoder.git
-            git clone https://github.com/glample/fastBPE.git
-            cd ./fastBPE
-            g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
-            cd ../..
-            echo "Libraries installed."
-        else
-            echo "Library installation skipped."
-        fi
-        
-        if [ ! -z "$CUSTOM_CONFIG" ]; then
-            config="flue/examples/$CUSTOM_CONFIG"
-            if [ ! -f "$config" ]; then
-                echo "Error: The configuration file '$config' does not exist in the flue/examples directory."
-                exit 1
-            fi
-        fi
-        echo "Using configuration: $config"
-        source $config
-        
-        echo "Adding execution permissions to scripts..."
-        chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py ./flue/extract_xnli.py
-        chmod +x ./flue/pretrained_models/$model_name/*
-
         echo "Retrieving XNLI data..."
         ./flue/get-data-xnli.sh $DATA_DIR/xnli
         echo "Preparing XNLI data..."
@@ -882,16 +634,16 @@ case $TASK in
         echo "End of XNLI evaluation."
         ;;
     xnli-HF)
-        echo "Soon..."
+        echo "task not yet implemented..."
         exit 1
         ;;
     
     parsing)
-        echo "Soon..."
+        echo "task not yet implemented..."
         exit 1
         ;;
     wsd)
-        echo "Soon..."
+        echo "task not yet implemented..."
         exit 1
         ;;
     *)
