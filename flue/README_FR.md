@@ -2,13 +2,43 @@
 
 FLUE (French Language Understanding Evaluation) est un framework d'évaluation complet pour les modèles de langue française. Ce guide explique comment utiliser le script `evaluation_auto.sh` pour évaluer vos modèles sur diverses tâches de TAL français.
 
+# Note
+/!\ ce dépôt est encore en construction, certaines fonctionnalités ne sont pas encore implémentées ou risquent de ne pas correctement fonctionner.
+
+## Prérequis
+1) cloner le dépôt transformers https://github.com/formiel/transformers et le placer dans le répertoire `FLUE/tools`
+
+2) Avant d'exécuter un premier fine-tuning, il faut créer un nouvel environnement python, et installer la version de PyTorch compatible avec sa carte graphique.
+
+Pour cela, il existe un tableau qui référence les cartes graphiques avec leur capacité de calcul:
+- [CUDA GPU Compute Capability](https://developer.nvidia.com/cuda-gpus#compute)
+- [Legacy CUDA GPU Compute Capability](https://developer.nvidia.com/cuda-legacy-gpus)
+- [Installation de PyTorch + CUDA](https://pytorch.org/get-started/locally/)
+
+Par exemple, avec PyTorch 2.7.1 sont prises en charge les cartes graphiques avec une capacité de calcul comprise entre 5.0 et 9.0
+
+```bash
+python -c "import torch; print(torch.__version__)"
+
+2.7.1+cu126
+
+python -c "import torch; print(torch.cuda.get_arch_list())"
+
+['sm_50', 'sm_60', 'sm_70', 'sm_75', 'sm_80', 'sm_86', 'sm_90']
+```
+
+Une fois l'installation terminée, il est possible de lancer `evaluation_auto.sh` depuis le répertoire racine du projet `FLUE`
+
 ## Démarrage Rapide
 
-1. **Cloner le dépôt**
-2. **S'assurer d'être dans le répertoire racine FLUE**
-3. **Lancer l'évaluation** :
+
+1. **Placer votre modèle** dans `flue/pretrained_models/<nom_de_votre_modele>`
+
+2. **Démarrer le fine-tuning d'une tâche**
+
+se placer dans le répertoire `FLUE` et lancer:
    ```bash
-   bash ./flue/evaluation_auto.sh <tache> <installer_libs> <fichier_config>
+   ./flue/evaluation_auto.sh <tâche> <installer_libs> <fichier_config>
    ```
 
 ## Utilisation
@@ -32,83 +62,83 @@ bash ./flue/evaluation_auto.sh --help
 bash ./flue/evaluation_auto.sh -h
 ```
 
-### Tâches Disponibles
+### Tâches Disponibles sur `evaluation_auto.sh`
 
-#### Tâches XLM
-- `cls-books-XLM` : Classification de sentiments - livres
-- `cls-music-XLM` : Classification de sentiments - musique
-- `cls-dvd-XLM` : Classification de sentiments - DVD
-- `xnli-XLM` : Inférence en langage naturel cross-lingue
-- `pawsx-XLM` : Identification de paraphrases
+#### Tâches avec la librairie Hugging Face Transformers (Recommandées)
+- **`cls-HF`** : Analyse de sentiment cross-lingue avec Hugging Face Transformers
+- **`xnli-HF`** : Inférence en langage naturel cross-lingue avec Hugging Face Transformers
 
-#### Tâches Hugging Face
-- `cls-books-HF` : Classification livres - HF
-- `cls-music-HF` : Classification musique - HF
-- `cls-dvd-HF` : Classification DVD - HF
-- `pawsx-HF` : PAWSX avec Hugging Face
+#### Tâches avec la librairie XLM (Dépassé)
+- **`cls-XLM`** : Analyse de sentiment cross-lingue avec le framework XLM
+- **`xnli-XLM`** : Inférence en langage naturel cross-lingue avec le framework XLM
+- **`pawsx`** : Paraphrase Adversaries from Word Scrambling for Cross-lingual Understanding
 
-#### Tâches MLflow
-- `mlflow-cls-books-HF` : Classification livres avec suivi MLflow
-- `mlflow-cls-music-HF` : Classification musique avec suivi MLflow
-- `mlflow-cls-dvd-HF` : Classification DVD avec suivi MLflow
-- `mlflow-pawsx-HF` : PAWSX avec suivi MLflow
+#### Tâches Hugging Face avec suivi sur Mlflow
+- **`mlflow-cls-books-HF`**
+- **`mlflow-cls-music-HF`** 
+- **`mlflow-cls-dvd-HF`** 
+- **`mlflow-pawsx-HF`**
 
-#### Tâches Non Implémentées
-- `xnli-HF` : XNLI avec intégration Hugging Face (à implémenter)
-- `parsing` : Analyse syntaxique (à implémenter)
-- `wsd` : Désambiguïsation lexicale (à implémenter)
 
 ## Exemples
 
-### Classification de Sentiments (Books)
-```bash
-bash ./flue/evaluation_auto.sh cls-books-XLM true cls_books_lr5e6_xlm_base_cased.cfg
-```
-
-### XNLI avec Installation de Dépendances
-```bash
-bash ./flue/evaluation_auto.sh xnli-XLM true xnli_config_xlm_base_cased.cfg
-```
-
-### Tâche Hugging Face
-```bash
-bash ./flue/evaluation_auto.sh cls-books-HF false cls_books_lr5e6_hf.cfg
-```
-
-### Tâche PAWSX
-```bash
-bash ./flue/evaluation_auto.sh pawsx-HF true pawsx_config_hf.cfg
-```
-
-## Configuration
-
-### Fichiers de Configuration Disponibles
-
-Le framework inclut des configurations dans `flue/examples/` :
-- `cls_books_lr5e6_xlm_base_cased.cfg` - Classification livres (XLM)
-- `cls_books_lr5e6_hf.cfg` - Classification livres (HF)
-- Autres configurations spécifiques aux tâches
-
-### Structure des Fichiers de Configuration
+### 1. Évaluer avec le Modèle par Défaut
 
 ```bash
-# Paramètres du modèle
-model_type=flaubert
-model_name=flaubert_base_cased
-model_name_or_path=flue/pretrained_models/flaubert_base_cased
+# Utiliser le modèle flaubert_base_cased par défaut, installer les librairies
+bash ./flue/evaluation_auto.sh xnli-HF true
 
-# Paramètres d'entraînement
-batch_size=8
-lr=0.000005
-epochs=10
-dropout=0.1
-
-# Chemins des données
-data_dir=flue/data/xnli/processed-csv
-train_file=flue/data/xnli/processed-csv/train.csv
-validation_file=flue/data/xnli/processed-csv/valid.csv
-test_file=flue/data/xnli/processed-csv/test.csv
+# Utiliser le modèle par défaut, ignorer l'installation des librairies
+bash ./flue/evaluation_auto.sh cls-HF false
 ```
+
+### 2. Évaluer avec Votre Propre Modèle
+
+```bash
+# Évaluer votre modèle personnalisé
+bash ./flue/evaluation_auto.sh xnli-HF true mon_modele_francais
+
+# Évaluer CamemBERT
+bash ./flue/evaluation_auto.sh cls-HF false camembert-base
+```
+
+### 3. Utiliser une Configuration Personnalisée
+
+```bash
+# Utiliser votre propre fichier de configuration
+bash ./flue/evaluation_auto.sh xnli-HF true mon_modele chemin/vers/ma_config.cfg
+```
+
+## Configuration des Modèles
+
+### Structure des Répertoires
+
+Placez vos modèles dans le répertoire `flue/pretrained_models/` :
+
+```
+flue/pretrained_models/
+├── flaubert_base_cased/          # Modèle par défaut
+├── mon_modele_francais/          # Votre modèle personnalisé
+├── camembert-base/               # CamemBERT
+└── nom_de_votre_modele/          # Tout autre modèle
+    ├── config.json
+    ├── pytorch_model.bin (ou model.safetensors)
+    ├── tokenizer.json
+    ├── tokenizer_config.json
+    └── vocab.txt
+```
+
+## Fichiers de Configuration
+
+### Configurations par Défaut
+
+Le framework inclut des configurations par défaut dans `flue/examples/` :
+- `xnli_lr5e6_hf_base_uncased.cfg` - Configuration XNLI par défaut
+- `cls_books_lr5e6_hf_base_uncased.cfg` - Configuration CLS par défaut
+- `xnli_lr5e6_xlm_base_cased.cfg` - Configuration XNLI XLM
+- `pawsx_lr5e6_xlm_base_cased.cfg` - Configuration PAWSX
+
+### Configuration Personnalisée
 
 Créez votre propre fichier `.cfg` avec ces paramètres :
 
@@ -234,33 +264,66 @@ Pour implémenter une nouvelle tâche dans `evaluation_auto.sh` :
 
 1. **Ajouter le cas dans le switch** :
 ```bash
-"ma_nouvelle_tache")
-    echo "Exécution de ma nouvelle tâche..."
-    # Votre code d'implémentation ici
-    ;;
+export MODEL_NAME=mon_modele_personnalise
+export BATCH_SIZE=16
+bash ./flue/evaluation_auto.sh xnli-HF false
 ```
 
-2. **Ajouter à l'aide** :
-```bash
-# Dans la fonction show_usage(), ajouter :
-echo "  ma_nouvelle_tache    : Description de ma tâche"
-```
+### Métriques d'Évaluation Personnalisées
 
-3. **Tester l'implémentation** :
-```bash
-bash ./flue/evaluation_auto.sh ma_nouvelle_tache false test_config.cfg
-```
+Ajoutez vos propres scripts d'évaluation en suivant le modèle de :
+- `flue/accuracy_from_hf.py` - Traitement des résultats Hugging Face
+- `flue/accuracy_from_task3.py` - Traitement des résultats XLM
 
-### Guidelines de Contribution
+### Validation Modulaire des Arguments
 
-- Gardez la cohérence avec les tâches existantes
-- Ajoutez des messages d'erreur appropriés
-- Documentez les nouvelles tâches dans les README
-- Testez avec différentes configurations
+Le script utilise maintenant une approche modulaire pour la validation des arguments :
+- Chaque tâche valide ses propres paramètres requis
+- La validation `INSTALL_LIBS` se fait au niveau de chaque tâche
+- Cela améliore la maintenabilité et la clarté du code
 
-### Structure des Fichiers
+## Contribution
 
-- `evaluation_auto.sh` : Script principal d'évaluation
-- `flue/examples/` : Fichiers de configuration
-- `flue/data/` : Données d'évaluation
-- Documentation dans les fichiers README
+Pour ajouter de nouvelles tâches ou modèles :
+1. Créez des fichiers de configuration dans `flue/examples/`
+2. Ajoutez la gestion des cas dans `evaluation_auto.sh`
+3. Implémentez le prétraitement des données si nécessaire
+4. Ajoutez des scripts de traitement des résultats
+
+## Licence
+
+Notre contribution est basée sur le benchmark FLUE original. Veuillez citer l'article lors de l'utilisation de ce framework d'évaluation.
+
+# XLM
+
+./flue/evaluation_auto.sh cls-books-XLM false cls_books_lr5e6_xlm_base_cased.cfg
+
+./flue/evaluation_auto.sh cls-music-XLM false cls_music_lr5e6_xlm_base_cased.cfg
+
+./flue/evaluation_auto.sh cls-dvd-XLM false cls_dvd_lr5e6_xlm_base_cased.cfg
+
+./flue/evaluation_auto.sh pawsx-XLM false pawsx_lr5e6_xlm_base_cased.cfg
+
+./flue/evaluation_auto.sh xnli-XLM false xnli_lr5e6_xlm_base_cased.cfg
+
+# HuggingFace
+
+./flue/evaluation_auto.sh cls-books-HF false cls_books_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh cls-music-HF false cls_music_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh pawsx-HF false pawsx_lr5e6_hf.cfg
+
+# Mlflow
+
+mlflow server --host 0.0.0.0 --port 5000
+
+./flue/evaluation_auto.sh mlflow-cls-books-HF false cls_books_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh mlflow-cls-music-HF false cls_music_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh mlflow-cls-dvd-HF false cls_dvd_lr5e6_hf.cfg
+
+./flue/evaluation_auto.sh mlflow-pawsx-HF false pawsx_lr5e6_hf.cfg
