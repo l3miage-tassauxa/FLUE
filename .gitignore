@@ -25,3 +25,5 @@ tools/fastBPE
 tools/mosesdecoder
 tools/wikiextractor
 mlruns
+stderr.log
+stdout.log
