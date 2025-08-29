@@ -8,13 +8,12 @@ MODEL_DIR=./flue/pretrained_models/
 # Check the first argument (task)
 if [ -z "$1" ]; then
         echo "Usage: ./evaluation_auto.sh <task> <install_libs> <config_file>"
-        echo "Tasks: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx-XLM, pawsx-HF, parse, wsd, mlflow-cls-books-HF"
+        echo "Tasks: cls-books-XLM, cls-music-XLM, cls-dvd-XLM, cls-books-HF, cls-music-HF, cls-dvd-HF, xnli-HF, xnli-XLM, pawsx-HF, parsing, wsd, mlflow-cls-books-HF, mlflow-cls-music-HF, mlflow-cls-dvd-HF, mlflow-pawsx-HF"
         echo "Install libs: true/false"
         echo "Config file: path to a custom configuration file"
         exit 1
 fi
 
-# Parameters
 # Parameters
 TASK=$1
 INSTALL_LIBS=$2
@@ -24,7 +23,6 @@ echo "=== FLUE Evaluation ==="
 echo "Task: $TASK"
 echo "Install libraries: $INSTALL_LIBS"
 if [ ! -z "$CUSTOM_CONFIG" ]; then
-    echo "Custom configuration: $CUSTOM_CONFIG"
     echo "Custom configuration: $CUSTOM_CONFIG"
 fi
 
@@ -39,11 +37,9 @@ case $TASK in
     cls-books-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Please specify whether libraries should be installed (true/false)."
-            echo "Please specify whether libraries should be installed (true/false)."
             exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
             echo "Installing required libraries..."
             pip install -r ./libraries/XLM-requirements.txt
             cd ./tools
@@ -54,9 +50,7 @@ case $TASK in
             g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
             cd ../..
             echo "Libraries installed."
-            echo "Libraries installed."
         else
-            echo "Library installation skipped."
             echo "Library installation skipped."
         fi
         
@@ -113,11 +107,9 @@ case $TASK in
     cls-music-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Please specify whether libraries should be installed (true/false)."
-            echo "Please specify whether libraries should be installed (true/false)."
             exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
             echo "Installing required libraries..."
             pip install -r ./libraries/XLM-requirements.txt
             cd ./tools
@@ -128,9 +120,7 @@ case $TASK in
             g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
             cd ../..
             echo "Libraries installed."
-            echo "Libraries installed."
         else
-            echo "Library installation skipped."
             echo "Library installation skipped."
         fi
         
@@ -182,16 +172,14 @@ case $TASK in
                         --max_vocab $max_vocab
 
         echo "Calculating accuracy from CLS music predictions..."
-        python3 flue/accuracy_calculator.py --predictions_file ./flue/experiments/cls_music_xlm_base_cased/bs_8_dropout_0.1_ep_30_lre_5e6_lrp_5e6/test.pred.$((num_epochs - 1)) --labels_file $DATA_DIR/cls/processed/music/test.label --format xlm --task cls
+        python3 flue/accuracy_calculator.py --predictions_file $output_dir/test.pred.$((num_epochs - 1)) --labels_file $DATA_DIR/cls/processed/music/test.label --format xlm --task cls
         ;;
     cls-dvd-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Please specify whether libraries should be installed (true/false)."
-            echo "Please specify whether libraries should be installed (true/false)."
             exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
             echo "Installing required libraries..."
             pip install -r ./libraries/XLM-requirements.txt
             cd ./tools
@@ -202,9 +190,7 @@ case $TASK in
             g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
             cd ../..
             echo "Libraries installed."
-            echo "Libraries installed."
         else
-            echo "Library installation skipped."
             echo "Library installation skipped."
         fi
         
@@ -260,17 +246,13 @@ case $TASK in
     cls-books-HF)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Please specify whether libraries should be installed (true/false)."
-            echo "Please specify whether libraries should be installed (true/false)."
             exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
             echo "Installing required libraries..."
-            echo "Installing required libraries..."
             pip install -r ./libraries/hg-requirements.txt
             echo "Libraries installed."
-            echo "Libraries installed."
         else
-            echo "Library installation skipped."
             echo "Library installation skipped."
         fi
         
@@ -307,7 +289,7 @@ case $TASK in
                                  --do_lower $do_lower \
                                  --use_hugging_face true
 
-        echo "Conversion des fichiers TSV au format CSV..."
+        echo "Converting TSV files to CSV format..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/books/
 
         echo "Launching CLS books evaluation..."
@@ -406,17 +388,13 @@ case $TASK in
     cls-music-HF)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Please specify whether libraries should be installed (true/false)."
-            echo "Please specify whether libraries should be installed (true/false)."
             exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
             echo "Installing required libraries..."
-            echo "Installing required libraries..."
             pip install -r ./libraries/hg-requirements.txt
             echo "Libraries installed."
-            echo "Libraries installed."
         else
-            echo "Library installation skipped."
             echo "Library installation skipped."
         fi
         
@@ -453,7 +431,7 @@ case $TASK in
                                  --do_lower $do_lower \
                                  --use_hugging_face true
 
-        echo "Conversion des fichiers TSV au format CSV..."
+        echo "Converting TSV files to CSV format..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/music/
 
         echo "Launching CLS music evaluation..."
@@ -543,17 +521,13 @@ case $TASK in
     cls-dvd-HF)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Please specify whether libraries should be installed (true/false)."
-            echo "Please specify whether libraries should be installed (true/false)."
             exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
             echo "Installing required libraries..."
-            echo "Installing required libraries..."
             pip install -r ./libraries/hg-requirements.txt
             echo "Libraries installed."
-            echo "Libraries installed."
         else
-            echo "Library installation skipped."
             echo "Library installation skipped."
         fi
         
@@ -564,7 +538,6 @@ case $TASK in
                 exit 1
             fi
         fi
-        echo "Using configuration: $config"
         echo "Using configuration: $config"
         
         echo "Adding execution permissions to scripts..."
@@ -590,7 +563,7 @@ case $TASK in
                                  --do_lower $do_lower \
                                  --use_hugging_face true
 
-        echo "Conversion des fichiers TSV au format CSV..."
+        echo "Converting TSV files to CSV format..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/dvd/
         
         echo "Launching CLS dvd evaluation..."
@@ -619,17 +592,13 @@ case $TASK in
     mlflow-cls-dvd-HF)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Please specify whether libraries should be installed (true/false)."
-            echo "Please specify whether libraries should be installed (true/false)."
             exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
             echo "Installing required libraries..."
-            echo "Installing required libraries..."
             pip install -r ./libraries/hg-requirements.txt
             echo "Libraries installed."
-            echo "Libraries installed."
         else
-            echo "Library installation skipped."
             echo "Library installation skipped."
         fi
         
@@ -666,7 +635,7 @@ case $TASK in
                                  --do_lower $do_lower \
                                  --use_hugging_face true
 
-        echo "Conversion des fichiers TSV au format CSV..."
+        echo "Converting TSV files to CSV format..."
         python flue/data/hg_data_tsv_to_csv.py $DATA_DIR/cls/processed/dvd/
 
         echo "Mlflow tracking: Launching CLS dvd evaluation..."
@@ -741,17 +710,13 @@ case $TASK in
     pawsx-HF)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Please specify whether libraries should be installed (true/false)."
-            echo "Please specify whether libraries should be installed (true/false)."
             exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
             echo "Installing required libraries..."
-            echo "Installing required libraries..."
             pip install -r ./libraries/hg-requirements.txt
             echo "Libraries installed."
-            echo "Libraries installed."
         else
-            echo "Library installation skipped."
             echo "Library installation skipped."
         fi
         
@@ -770,9 +735,7 @@ case $TASK in
         chmod +x ./flue/accuracy_calculator.py
 
         echo "Retrieving PAWSX data..."
-        echo "Retrieving PAWSX data..."
         ./flue/get-data-pawsx.sh $DATA_DIR/pawsx
-        echo "Preparing PAWSX data..."
         echo "Preparing PAWSX data..."
         python flue/extract_pawsx.py --indir $DATA_DIR/pawsx/raw/x-final \
                              --outdir $DATA_DIR/pawsx/processed \
@@ -861,11 +824,9 @@ case $TASK in
     xnli-XLM)
         if [ -z "$INSTALL_LIBS" ]; then
             echo "Please specify whether libraries should be installed (true/false)."
-            echo "Please specify whether libraries should be installed (true/false)."
             exit 1
         fi
         if [ $INSTALL_LIBS == true ]; then
-            echo "Installing required libraries..."
             echo "Installing required libraries..."
             pip install -r ./libraries/XLM-requirements.txt
             cd ./tools
@@ -876,9 +837,7 @@ case $TASK in
             g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
             cd ../..
             echo "Libraries installed."
-            echo "Libraries installed."
         else
-            echo "Library installation skipped."
             echo "Library installation skipped."
         fi
         
@@ -892,7 +851,6 @@ case $TASK in
         echo "Using configuration: $config"
         source $config
         
-        echo "Adding execution permissions to scripts..."
         echo "Adding execution permissions to scripts..."
         chmod +x ./flue/get-data-xnli.sh ./flue/prepare-data-xnli.sh ./flue/flue_xnli.py ./flue/extract_xnli.py
         chmod +x ./flue/pretrained_models/$model_name/*
